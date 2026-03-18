@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme-driven Design System — NO defaults. All values injected by active theme. */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-warm {
+    background: linear-gradient(135deg, hsl(var(--warm-cream)) 0%, hsl(var(--warm-beige)) 100%);
+  }
+
+  .shadow-warm {
+    box-shadow: 0 4px 20px -4px hsl(var(--warm-brown) / 0.15);
+  }
+
+  .shadow-warm-lg {
+    box-shadow: 0 10px 40px -10px hsl(var(--warm-brown) / 0.2);
+  }
+
+  /* Cart drawer scrollbar */
+  .cart-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .cart-scroll::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .cart-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 8px 0;
+  }
+
+  .cart-scroll::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 10px;
+  }
+
+  .cart-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.4);
+  }
+
+  @media (min-width: 768px) {
+    .cart-scroll::-webkit-scrollbar-thumb {
+      background-color: transparent;
+    }
+    
+    .cart-scroll:hover::-webkit-scrollbar-thumb {
+      background-color: hsl(var(--border));
+    }
+  }
+}
+
+/* Cart drawer animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}

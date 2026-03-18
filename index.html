@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Set favicon as early as possible from cached settings
+      (function () {
+        try {
+          var raw = localStorage.getItem('site-assets-cache-v1');
+          if (!raw) return;
+          var parsed = JSON.parse(raw);
+          var url = parsed && (parsed.favicon_url || parsed.logo_url);
+          if (!url) return;
+          var clean = String(url).split('#')[0];
+          var pathPart = clean.split('?')[0];
+          var version = (pathPart.split('/').pop() || '0');
+          var sep = clean.indexOf('?') !== -1 ? '&' : '?';
+          var cacheBusted = clean + sep + 'v=' + encodeURIComponent(version);
+          var links = document.querySelectorAll("link[rel*='icon']");
+          links.forEach(function (l) { l.parentNode && l.parentNode.removeChild(l); });
+          var link = document.createElement('link');
+          link.rel = 'icon';
+          link.href = cacheBusted;
+          document.head.appendChild(link);
+          var shortcut = document.createElement('link');
+          shortcut.rel = 'shortcut icon';
+          shortcut.href = cacheBusted;
+          document.head.appendChild(shortcut);
+        } catch (e) {}
+      })();
+    </script>
+    <title>Ishlab chiqarish sanoati uchun yuqori sifatli materiallar.</title>
+    <meta name="description" content="Kiyim, avtomobil interyeri va mebel ishlab chiqaruvchilari uchun sifatli materiallar.">
+    <meta name="author" content="Chorrom" />
+
+    
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/QQ1VGtThcIQIz0sGvAimaJVOwWU2/social-images/social-1772915121159-Mirmexa.webp">
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Chorrom" />
+    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/QQ1VGtThcIQIz0sGvAimaJVOwWU2/social-images/social-1772915121159-Mirmexa.webp">
+
+    <!-- Google Fonts for themes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <meta property="og:title" content="Ishlab chiqarish sanoati uchun yuqori sifatli materiallar.">
+  <meta name="twitter:title" content="Ishlab chiqarish sanoati uchun yuqori sifatli materiallar.">
+  <meta property="og:description" content="Kiyim, avtomobil interyeri va mebel ishlab chiqaruvchilari uchun sifatli materiallar.">
+  <meta name="twitter:description" content="Kiyim, avtomobil interyeri va mebel ishlab chiqaruvchilari uchun sifatli materiallar.">
+</head>
+
+  <body>
+    <script>
+      // Inline theme initialization — ONLY from cache, NO defaults
+      (function() {
+        try {
+          var cached = localStorage.getItem('furniture-active-theme');
+          if (cached) {
+            var theme = JSON.parse(cached);
+            var root = document.documentElement;
+            
+            if (theme.colorPalette) {
+              Object.keys(theme.colorPalette).forEach(function(key) {
+                var cssVar = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+                root.style.setProperty('--' + cssVar, theme.colorPalette[key]);
+              });
+            }
+            
+            if (theme.typography) {
+              if (theme.typography.fontSans) root.style.setProperty('--font-sans', theme.typography.fontSans);
+              if (theme.typography.fontSerif) root.style.setProperty('--font-serif', theme.typography.fontSerif);
+              if (theme.typography.fontHeading) root.style.setProperty('--font-heading', theme.typography.fontHeading);
+            }
+            
+            if (theme.componentStyles) {
+              if (theme.componentStyles.borderRadius) root.style.setProperty('--radius', theme.componentStyles.borderRadius);
+              if (theme.componentStyles.buttonRadius) root.style.setProperty('--button-radius', theme.componentStyles.buttonRadius);
+              if (theme.componentStyles.cardRadius) root.style.setProperty('--card-radius', theme.componentStyles.cardRadius);
+              if (theme.componentStyles.shadowSm) root.style.setProperty('--shadow-sm', theme.componentStyles.shadowSm);
+              if (theme.componentStyles.shadowMd) root.style.setProperty('--shadow-md', theme.componentStyles.shadowMd);
+              if (theme.componentStyles.shadowLg) root.style.setProperty('--shadow-lg', theme.componentStyles.shadowLg);
+            }
+            
+            if (theme.layoutSettings) {
+              if (theme.layoutSettings.containerMaxWidth) root.style.setProperty('--container-max-width', theme.layoutSettings.containerMaxWidth);
+              if (theme.layoutSettings.sectionSpacing) root.style.setProperty('--section-spacing', theme.layoutSettings.sectionSpacing);
+              if (theme.layoutSettings.cardPadding) root.style.setProperty('--card-padding', theme.layoutSettings.cardPadding);
+            }
+            
+            if (theme.isDark) {
+              root.classList.add('dark');
+            }
+            
+            root.setAttribute('data-theme-loaded', 'true');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <style>
+      /* Hide body until theme is loaded — prevents FOUC, NO default UI */
+      html:not([data-theme-loaded]) body > #root {
+        visibility: hidden;
+      }
+      html:not([data-theme-loaded]) body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
+        z-index: 99999;
+      }
+      html:not([data-theme-loaded]) body::after {
+        content: '';
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 4px solid #ccc;
+        border-top-color: #333;
+        border-radius: 50%;
+        animation: theme-loader-spin 0.8s linear infinite;
+        z-index: 100000;
+      }
+      @keyframes theme-loader-spin {
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      html[data-theme-loaded] body > #root {
+        visibility: visible;
+      }
+    </style>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
