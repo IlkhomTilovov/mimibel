@@ -403,30 +403,16 @@ export default function ProductsNew() {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `product-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `products/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(filePath, file, {
-            upsert: true,
-            cacheControl: '31536000',
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-
+        const publicUrl = await uploadOptimizedImage(file, 'products', {
+          fileNamePrefix: 'product',
+        });
         uploadedMedia.push({ type: 'image', url: publicUrl });
       }
 
       const newMediaItems = [...mediaItems, ...uploadedMedia];
       setMediaItems(newMediaItems);
       setFormData({ ...formData, images: serializeMediaItems(newMediaItems) });
-      toast({ title: 'Muvaffaqiyat', description: `${uploadedMedia.length} ta rasm yuklandi` });
+      toast({ title: 'Muvaffaqiyat', description: `${uploadedMedia.length} ta rasm yuklandi (WebP optimizatsiya bilan)` });
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({ variant: 'destructive', title: 'Xatolik', description: 'Rasmni yuklashda xatolik: ' + error.message });

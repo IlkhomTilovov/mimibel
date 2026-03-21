@@ -51,6 +51,8 @@ export const LazyImage = memo(function LazyImage({
 
   const imgSrc = error ? placeholder : (src || placeholder);
 
+  const optimized = useMemo(() => getOptimizedImageUrls(imgSrc), [imgSrc]);
+
   return (
     <div
       ref={imgRef}
@@ -61,22 +63,37 @@ export const LazyImage = memo(function LazyImage({
         <div className="absolute inset-0 animate-pulse bg-muted" />
       )}
 
-      {/* Simple img tag - browser handles format via storage URL */}
       {isInView && (
-        <img
-          src={imgSrc}
-          alt={alt}
-          onLoad={handleLoad}
-          onError={handleError}
-          loading={priority ? 'eager' : 'lazy'}
-          decoding="async"
-          className={cn(
-            'transition-opacity duration-300',
-            isLoaded ? 'opacity-100' : 'opacity-0',
-            className
+        <picture>
+          {optimized.webpSrcSet && (
+            <source
+              type="image/webp"
+              srcSet={optimized.webpSrcSet}
+              sizes={finalSizes}
+            />
           )}
-          {...props}
-        />
+          {optimized.srcSet && (
+            <source
+              type="image/jpeg"
+              srcSet={optimized.srcSet}
+              sizes={finalSizes}
+            />
+          )}
+          <img
+            src={optimized.fallbackSrc}
+            alt={alt}
+            onLoad={handleLoad}
+            onError={handleError}
+            loading={priority ? 'eager' : 'lazy'}
+            decoding="async"
+            className={cn(
+              'transition-opacity duration-300',
+              isLoaded ? 'opacity-100' : 'opacity-0',
+              className
+            )}
+            {...props}
+          />
+        </picture>
       )}
     </div>
   );
