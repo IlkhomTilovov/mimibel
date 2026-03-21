@@ -145,21 +145,12 @@ export default function SystemSettings() {
         }
       }
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `site-logo-${Date.now()}.${fileExt}`;
-      const filePath = `logos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filePath);
-      const newLogoUrl = urlData.publicUrl;
+      const newLogoUrl = await uploadOptimizedImage(file, 'logos', {
+        fileNamePrefix: 'site-logo',
+      });
       setFormData({ ...formData, logo_url: newLogoUrl });
       setLogoPreview(newLogoUrl);
-      toast({ title: 'Muvaffaqiyat', description: 'Logo yuklandi' });
+      toast({ title: 'Muvaffaqiyat', description: 'Logo yuklandi (WebP optimizatsiya bilan)' });
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({ variant: 'destructive', title: 'Xatolik', description: error.message || 'Logoni yuklashda xatolik' });
