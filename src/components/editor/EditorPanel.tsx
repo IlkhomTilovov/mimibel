@@ -93,24 +93,13 @@ export function EditorPanel() {
     setHasUnsavedChanges(true);
 
     try {
-      // Save reference to old image for deletion
       const oldImageUrl = editValue || '';
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${selectedElement.contentKey}-${Date.now()}.${fileExt}`;
-      const filePath = `site-content/${fileName}`;
+      const publicUrl = await uploadOptimizedImage(file, 'site-content', {
+        fileNamePrefix: selectedElement.contentKey,
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
-      // Save URL to site_content for both languages (images are language-independent)
+      // Save URL to site_content for both languages
       await updateContent(selectedElement.contentKey, 'uz', publicUrl);
       await updateContent(selectedElement.contentKey, 'ru', publicUrl);
 
