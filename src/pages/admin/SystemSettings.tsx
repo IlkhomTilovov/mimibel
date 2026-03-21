@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Save, Globe, Phone, Search, Settings2, Upload, X, Link as LinkIcon, Image, Share2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadOptimizedImage } from '@/lib/uploadWithOptimization';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
