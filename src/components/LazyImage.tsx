@@ -51,7 +51,18 @@ export const LazyImage = memo(function LazyImage({
 
   const imgSrc = error ? placeholder : (src || placeholder);
 
-  const optimized = useMemo(() => getOptimizedImageUrls(imgSrc), [imgSrc]);
+  // Only use optimized srcSet if image was uploaded with the optimizer
+  // (detected by having the naming pattern: basepath-300.webp, etc.)
+  const optimized = useMemo(() => {
+    if (!imgSrc || !imgSrc.includes('/storage/')) return null;
+    const urls = getOptimizedImageUrls(imgSrc);
+    // Only use if the original URL ends with .jpg or .png (not .PNG, .SVG etc.)
+    // and matches our optimizer's naming convention
+    const hasOptimizedVariants = /\.(jpg|jpeg|png)$/i.test(imgSrc) && 
+      !imgSrc.includes('-efterd') && // skip old-format uploads
+      imgSrc.match(/-[a-z0-9]{6}\.(jpg|jpeg|png)$/i); // matches new format: -abc123.jpg
+    return hasOptimizedVariants ? urls : null;
+  }, [imgSrc]);
 
   return (
     <div
@@ -63,22 +74,18 @@ export const LazyImage = memo(function LazyImage({
         <div className="absolute inset-0 animate-pulse bg-muted" />
       )}
 
-      {isInView && (
+      {isInView && optimized?.webpSrcSet ? (
         <picture>
-          {optimized.webpSrcSet && (
-            <source
-              type="image/webp"
-              srcSet={optimized.webpSrcSet}
-              sizes={finalSizes}
-            />
-          )}
-          {optimized.srcSet && (
-            <source
-              type="image/jpeg"
-              srcSet={optimized.srcSet}
-              sizes={finalSizes}
-            />
-          )}
+          <source
+            type="image/webp"
+            srcSet={optimized.webpSrcSet}
+            sizes={finalSizes}
+          />
+          <source
+            type="image/jpeg"
+            srcSet={optimized.srcSet}
+            sizes={finalSizes}
+          />
           <img
             src={optimized.fallbackSrc}
             alt={alt}
@@ -94,7 +101,22 @@ export const LazyImage = memo(function LazyImage({
             {...props}
           />
         </picture>
-      )}
+      ) : isInView ? (
+        <img
+          src={imgSrc}
+          alt={alt}
+          onLoad={handleLoad}
+          onError={handleError}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          className={cn(
+            'transition-opacity duration-300',
+            isLoaded ? 'opacity-100' : 'opacity-0',
+            className
+          )}
+          {...props}
+        />
+      ) : null}
     </div>
   );
 });
