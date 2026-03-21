@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useRef, useEffect, memo, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { getOptimizedImageUrls } from '@/lib/imageOptimizer';
 
 interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
