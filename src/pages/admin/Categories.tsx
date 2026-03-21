@@ -15,6 +15,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadOptimizedImage } from '@/lib/uploadWithOptimization';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -117,22 +118,12 @@ export default function Categories() {
 
     setImageUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `category-${Date.now()}.${fileExt}`;
-      const filePath = `categories/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
+      const publicUrl = await uploadOptimizedImage(file, 'categories', {
+        fileNamePrefix: 'category',
+      });
 
       setFormData(prev => ({ ...prev, image: publicUrl }));
-      toast({ title: 'Muvaffaqiyat', description: 'Rasm yuklandi' });
+      toast({ title: 'Muvaffaqiyat', description: 'Rasm yuklandi (WebP optimizatsiya bilan)' });
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({ variant: 'destructive', title: 'Xatolik', description: 'Rasm yuklanmadi: ' + error.message });
