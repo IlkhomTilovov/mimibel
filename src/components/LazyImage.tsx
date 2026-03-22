@@ -12,6 +12,17 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   priority?: boolean;
 }
 
+const variantAvailabilityCache = new Map<string, boolean>();
+
+const isOptimizedCandidate = (url: string) =>
+  Boolean(url) && url.includes('/storage/') && /\.(jpg|jpeg|png)$/.test(url);
+
+const getProbeVariantUrl = (url: string): string | null => {
+  const match = url.match(/^(.+)\.[^.]+$/);
+  if (!match) return null;
+  return `${match[1]}-600.webp`;
+};
+
 export const LazyImage = memo(function LazyImage({
   src,
   alt,
@@ -25,6 +36,7 @@ export const LazyImage = memo(function LazyImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
   const [error, setError] = useState(false);
+  const [hasOptimizedVariants, setHasOptimizedVariants] = useState(false);
   const imgRef = useRef<HTMLDivElement>(null);
 
   const finalSizes = sizesProp || '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw';
@@ -47,34 +59,61 @@ export const LazyImage = memo(function LazyImage({
   }, [priority]);
 
   const handleLoad = () => setIsLoaded(true);
-  const handleError = () => { setError(true); setIsLoaded(true); };
+  const handleError = () => {
+    setError(true);
+    setIsLoaded(true);
+  };
 
   const imgSrc = error ? placeholder : (src || placeholder);
 
-  // Only use optimized srcSet if image was uploaded with the optimizer
-  // (detected by having the naming pattern: basepath-300.webp, etc.)
   const optimized = useMemo(() => {
-    if (!imgSrc || !imgSrc.includes('/storage/')) return null;
-    const urls = getOptimizedImageUrls(imgSrc);
-    // Only use if the original URL ends with .jpg or .png (not .PNG, .SVG etc.)
-    // and matches our optimizer's naming convention
-    const hasOptimizedVariants = /\.(jpg|jpeg|png)$/i.test(imgSrc) && 
-      !imgSrc.includes('-efterd') && // skip old-format uploads
-      imgSrc.match(/-[a-z0-9]{6}\.(jpg|jpeg|png)$/i); // matches new format: -abc123.jpg
-    return hasOptimizedVariants ? urls : null;
+    if (!isOptimizedCandidate(imgSrc)) return null;
+    return getOptimizedImageUrls(imgSrc);
   }, [imgSrc]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHasOptimizedVariants(false);
+
+    if (!optimized?.webpSrcSet) return;
+
+    const probeUrl = getProbeVariantUrl(imgSrc);
+    if (!probeUrl) return;
+
+    const cachedValue = variantAvailabilityCache.get(probeUrl);
+    if (cachedValue !== undefined) {
+      setHasOptimizedVariants(cachedValue);
+      return;
+    }
+
+    const probeImage = new Image();
+    probeImage.onload = () => {
+      variantAvailabilityCache.set(probeUrl, true);
+      if (!cancelled) setHasOptimizedVariants(true);
+    };
+    probeImage.onerror = () => {
+      variantAvailabilityCache.set(probeUrl, false);
+      if (!cancelled) setHasOptimizedVariants(false);
+    };
+    probeImage.src = probeUrl;
+
+    return () => {
+      cancelled = true;
+      probeImage.onload = null;
+      probeImage.onerror = null;
+    };
+  }, [imgSrc, optimized?.webpSrcSet]);
 
   return (
     <div
       ref={imgRef}
       className={cn('relative overflow-hidden bg-muted', wrapperClassName)}
     >
-      {/* Skeleton placeholder */}
       {!isLoaded && (
         <div className="absolute inset-0 animate-pulse bg-muted" />
       )}
 
-      {isInView && optimized?.webpSrcSet ? (
+      {isInView && hasOptimizedVariants && optimized?.webpSrcSet ? (
         <picture>
           <source
             type="image/webp"
@@ -121,7 +160,6 @@ export const LazyImage = memo(function LazyImage({
   );
 });
 
-// Thumbnail version for product cards
 interface ThumbnailImageProps extends LazyImageProps {
   size?: 'sm' | 'md' | 'lg';
 }
@@ -154,7 +192,6 @@ export const ThumbnailImage = memo(function ThumbnailImage({
   );
 });
 
-// Hero image with priority loading
 export const HeroImage = memo(function HeroImage({
   src,
   className,
