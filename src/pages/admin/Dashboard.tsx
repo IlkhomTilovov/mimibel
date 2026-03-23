@@ -63,6 +63,7 @@ export default function Dashboard() {
     cancelled: 0,
     todayNew: 0,
     todayTotal: 0,
+    overdue: 0,
   });
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>({
