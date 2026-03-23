@@ -103,8 +103,7 @@ export default function Dashboard() {
 
       if (error) throw error;
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const now = new Date();
 
       const orderStats: OrderStats = {
         total: orders?.length || 0,
@@ -115,12 +114,20 @@ export default function Dashboard() {
         todayNew: orders?.filter(o => {
           const orderDate = new Date(o.created_at);
           orderDate.setHours(0, 0, 0, 0);
-          return orderDate.getTime() === today.getTime() && o.status === 'new';
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          return orderDate.getTime() === todayStart.getTime() && o.status === 'new';
         }).length || 0,
         todayTotal: orders?.filter(o => {
           const orderDate = new Date(o.created_at);
           orderDate.setHours(0, 0, 0, 0);
-          return orderDate.getTime() === today.getTime();
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          return orderDate.getTime() === todayStart.getTime();
+        }).length || 0,
+        overdue: orders?.filter(o => {
+          if (!o.deadline || o.status === 'completed' || o.status === 'cancelled') return false;
+          return new Date(o.deadline) < now;
         }).length || 0,
       };
 
