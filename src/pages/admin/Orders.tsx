@@ -754,6 +754,15 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                     <label className="text-sm text-muted-foreground">Sana</label>
                     <p>{formatDate(selectedOrder.created_at)}</p>
                   </div>
+                  {selectedOrder.deadline && (
+                    <div>
+                      <label className="text-sm text-muted-foreground">Muddat</label>
+                      <p className={`font-medium ${isOverdue(selectedOrder) ? 'text-red-600' : ''}`}>
+                        {isOverdue(selectedOrder) && '⚠️ '}
+                        {formatDeadline(selectedOrder.deadline)}
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <label className="text-sm text-muted-foreground">Holat</label>
                     <Select
