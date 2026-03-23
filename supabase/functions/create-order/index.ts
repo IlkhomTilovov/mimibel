@@ -169,6 +169,7 @@ Deno.serve(async (req) => {
         customer_name: body.customer_name.trim(),
         customer_phone: cleanPhone,
         customer_message: body.customer_message || null,
+        deadline: body.deadline || null,
         total_price: totalPrice,
         status: 'new',
         customer_id: customerId,

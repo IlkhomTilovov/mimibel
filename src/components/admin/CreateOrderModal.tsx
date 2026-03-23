@@ -198,6 +198,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
           customer_name: customerName.trim(),
           customer_phone: customerPhone,
           customer_message: customerMessage || undefined,
+          deadline: deadline ? deadline.toISOString() : undefined,
           items: cart.map(item => ({
             product_id: item.product.id,
             quantity: item.quantity,
