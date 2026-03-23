@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -260,7 +260,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
           ))}
         </div>
 
-        <ScrollArea className="flex-1 min-h-0 pr-4">
+        <div className="flex-1 min-h-0 overflow-y-auto pr-4">
           {/* Step 1: Customer */}
           {step === 'customer' && (
             <div className="space-y-4">
@@ -487,7 +487,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
               </Card>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="flex gap-2 pt-4">
           {step !== 'customer' && (
