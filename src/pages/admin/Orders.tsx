@@ -613,7 +613,7 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                 </TableHeader>
                 <TableBody>
                   {filteredOrders.map((order) => (
-                    <TableRow key={order.id} className="group">
+                    <TableRow key={order.id} className={`group ${isOverdue(order) ? 'bg-red-50 dark:bg-red-950/20' : ''}`}>
                       <TableCell className="font-medium">{order.order_number}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -628,6 +628,16 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                         {order.total_price ? formatPrice(order.total_price) : '-'}
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell>
+                        {order.deadline ? (
+                          <span className={`text-sm flex items-center gap-1 ${isOverdue(order) ? 'text-red-600 font-semibold' : 'text-muted-foreground'}`}>
+                            {isOverdue(order) && <AlertTriangle className="h-3 w-3" />}
+                            {formatDeadline(order.deadline)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(order.created_at)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
