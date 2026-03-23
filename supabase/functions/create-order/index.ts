@@ -18,6 +18,7 @@ interface CreateOrderRequest {
   customer_name: string;
   customer_phone: string;
   customer_message?: string;
+  deadline?: string;
   items: OrderItem[];
 }
 
