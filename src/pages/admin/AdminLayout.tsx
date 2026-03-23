@@ -175,7 +175,7 @@ export default function AdminLayout() {
             </div>
           )}
 
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
             {filteredNavItems.map((item) => (
               <Link
                 key={item.url}
