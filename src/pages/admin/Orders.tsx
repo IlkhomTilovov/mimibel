@@ -606,6 +606,7 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                     <TableHead>Telefon</TableHead>
                     <TableHead>Jami</TableHead>
                     <TableHead>Holat</TableHead>
+                    <TableHead>Muddat</TableHead>
                     <TableHead>Sana</TableHead>
                     <TableHead className="text-right">Amallar</TableHead>
                   </TableRow>
