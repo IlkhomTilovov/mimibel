@@ -457,6 +457,12 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
                         <span>{customerMessage}</span>
                       </>
                     )}
+                    {deadline && (
+                      <>
+                        <span className="text-muted-foreground">Muddat:</span>
+                        <span className="font-medium">{format(deadline, "dd.MM.yyyy")}</span>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
