@@ -186,7 +186,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
   });
 
   const canProceedToProducts = customerName.trim().length >= 2 && customerPhone.length >= 12;
-  const canSubmit = cart.length > 0;
+  const canSubmit = cart.length > 0 && !!deadline;
 
   const handleSubmit = async () => {
     if (!canSubmit || submitting) return;
@@ -322,36 +322,8 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Tayyor bo'lish muddati</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !deadline && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {deadline ? format(deadline, "dd.MM.yyyy") : "Sanani tanlang"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={deadline}
-                      onSelect={setDeadline}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
             </div>
           )}
-
           {/* Step 2: Products */}
           {step === 'products' && (
             <div className="space-y-4">
@@ -381,6 +353,35 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
                         </div>
                       </div>
                     ))}
+                    {/* Deadline picker inside cart */}
+                    <Separator />
+                    <div className="space-y-2">
+                      <Label>Tayyor bo'lish muddati *</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !deadline && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {deadline ? format(deadline, "dd.MM.yyyy") : "Sanani tanlang"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={deadline}
+                            onSelect={setDeadline}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </CardContent>
                 </Card>
               )}
