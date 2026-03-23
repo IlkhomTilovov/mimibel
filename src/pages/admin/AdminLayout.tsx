@@ -94,10 +94,10 @@ export default function AdminLayout() {
 
       {/* Mobile sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform lg:hidden",
+        "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform lg:hidden flex flex-col",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex items-center justify-between h-16 px-6 border-b">
+        <div className="flex items-center justify-between h-16 px-6 border-b flex-shrink-0">
           <Link to="/admin" className="font-serif text-xl font-bold text-primary">
             Admin Panel
           </Link>
@@ -112,13 +112,13 @@ export default function AdminLayout() {
 
         {/* User info */}
         {roleInfo && (
-          <div className="p-4 border-b">
+          <div className="p-4 border-b flex-shrink-0">
             <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
             <Badge className={cn("mt-1", roleInfo.color)}>{roleInfo.label}</Badge>
           </div>
         )}
 
-        <nav className="p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
           {filteredNavItems.map((item) => (
             <Link
               key={item.url}
@@ -137,7 +137,7 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t space-y-2">
+        <div className="p-4 border-t space-y-2 flex-shrink-0">
           <Button 
             variant="outline" 
             className="w-full justify-start gap-3"
