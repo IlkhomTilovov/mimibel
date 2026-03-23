@@ -260,7 +260,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
           ))}
         </div>
 
-        <ScrollArea className="flex-1 min-h-0 pr-4">
+        <div className="flex-1 min-h-0 overflow-y-auto pr-4">
           {/* Step 1: Customer */}
           {step === 'customer' && (
             <div className="space-y-4">
