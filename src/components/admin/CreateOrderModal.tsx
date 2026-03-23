@@ -487,7 +487,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
               </Card>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="flex gap-2 pt-4">
           {step !== 'customer' && (
