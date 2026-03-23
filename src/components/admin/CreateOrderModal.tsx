@@ -81,6 +81,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
       setCustomerPhone('+998');
       setCustomerName('');
       setCustomerMessage('');
+      setDeadline(undefined);
       setFoundCustomer(null);
       setIsNewCustomer(false);
       setCart([]);
