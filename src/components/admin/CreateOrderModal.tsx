@@ -57,6 +57,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
   const [customerPhone, setCustomerPhone] = useState('+998');
   const [customerName, setCustomerName] = useState('');
   const [customerMessage, setCustomerMessage] = useState('');
+  const [deadline, setDeadline] = useState<Date | undefined>(undefined);
   const [searchingCustomer, setSearchingCustomer] = useState(false);
   const [foundCustomer, setFoundCustomer] = useState<Customer | null>(null);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
