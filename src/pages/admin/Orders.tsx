@@ -407,6 +407,21 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
     return acc;
   }, {} as Record<string, number>);
 
+  // Check if deadline is overdue
+  const isOverdue = (order: Order) => {
+    if (!order.deadline || order.status === 'completed' || order.status === 'cancelled') return false;
+    return new Date(order.deadline) < new Date();
+  };
+
+  const formatDeadline = (deadline: string | null) => {
+    if (!deadline) return null;
+    const date = new Date(deadline);
+    return date.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  // Count overdue orders
+  const overdueCount = orders.filter(isOverdue).length;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
