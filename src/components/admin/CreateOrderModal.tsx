@@ -234,7 +234,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
@@ -260,7 +260,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
           ))}
         </div>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 min-h-0 pr-4">
           {/* Step 1: Customer */}
           {step === 'customer' && (
             <div className="space-y-4">
