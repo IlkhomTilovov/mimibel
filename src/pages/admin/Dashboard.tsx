@@ -283,6 +283,26 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {/* Overdue Orders Alert */}
+      {stats.overdue > 0 && (
+        <Card className="border-red-300 bg-red-50">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center">
+              <AlertTriangle className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-red-900">
+                {stats.overdue} ta buyurtma muddati o'tib ketgan!
+              </p>
+              <p className="text-sm text-red-700">Buyurtmalarni tekshiring va mijozlarga xabar bering</p>
+            </div>
+            <Button asChild size="sm" variant="destructive">
+              <Link to="/admin/orders">Ko'rish</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="hover:shadow-md transition-shadow">
