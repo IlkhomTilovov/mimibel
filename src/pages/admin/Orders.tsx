@@ -80,6 +80,7 @@ interface Order {
   status: string;
   total_price: number | null;
   created_at: string;
+  deadline: string | null;
   order_items?: OrderItem[];
 }
 
