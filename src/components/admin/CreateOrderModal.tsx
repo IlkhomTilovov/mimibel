@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Trash2, UserPlus, Package, Minus } from 'lucide-react';
+import { Plus, Search, Trash2, UserPlus, Package, Minus, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,9 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
