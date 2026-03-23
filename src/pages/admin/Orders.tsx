@@ -15,7 +15,8 @@ import {
   User,
   Clock,
   X,
-  Plus
+  Plus,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -79,6 +80,7 @@ interface Order {
   status: string;
   total_price: number | null;
   created_at: string;
+  deadline: string | null;
   order_items?: OrderItem[];
 }
 
@@ -405,6 +407,21 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
     return acc;
   }, {} as Record<string, number>);
 
+  // Check if deadline is overdue
+  const isOverdue = (order: Order) => {
+    if (!order.deadline || order.status === 'completed' || order.status === 'cancelled') return false;
+    return new Date(order.deadline) < new Date();
+  };
+
+  const formatDeadline = (deadline: string | null) => {
+    if (!deadline) return null;
+    const date = new Date(deadline);
+    return date.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  // Count overdue orders
+  const overdueCount = orders.filter(isOverdue).length;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -589,13 +606,14 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                     <TableHead>Telefon</TableHead>
                     <TableHead>Jami</TableHead>
                     <TableHead>Holat</TableHead>
+                    <TableHead>Muddat</TableHead>
                     <TableHead>Sana</TableHead>
                     <TableHead className="text-right">Amallar</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredOrders.map((order) => (
-                    <TableRow key={order.id} className="group">
+                    <TableRow key={order.id} className={`group ${isOverdue(order) ? 'bg-red-50 dark:bg-red-950/20' : ''}`}>
                       <TableCell className="font-medium">{order.order_number}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -610,6 +628,16 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                         {order.total_price ? formatPrice(order.total_price) : '-'}
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell>
+                        {order.deadline ? (
+                          <span className={`text-sm flex items-center gap-1 ${isOverdue(order) ? 'text-red-600 font-semibold' : 'text-muted-foreground'}`}>
+                            {isOverdue(order) && <AlertTriangle className="h-3 w-3" />}
+                            {formatDeadline(order.deadline)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(order.created_at)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
@@ -726,6 +754,15 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                     <label className="text-sm text-muted-foreground">Sana</label>
                     <p>{formatDate(selectedOrder.created_at)}</p>
                   </div>
+                  {selectedOrder.deadline && (
+                    <div>
+                      <label className="text-sm text-muted-foreground">Muddat</label>
+                      <p className={`font-medium ${isOverdue(selectedOrder) ? 'text-red-600' : ''}`}>
+                        {isOverdue(selectedOrder) && '⚠️ '}
+                        {formatDeadline(selectedOrder.deadline)}
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <label className="text-sm text-muted-foreground">Holat</label>
                     <Select

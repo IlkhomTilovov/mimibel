@@ -233,6 +233,7 @@ export type Database = {
           customer_message: string | null
           customer_name: string
           customer_phone: string
+          deadline: string | null
           id: string
           order_number: string
           status: string
@@ -246,6 +247,7 @@ export type Database = {
           customer_message?: string | null
           customer_name: string
           customer_phone: string
+          deadline?: string | null
           id?: string
           order_number: string
           status?: string
@@ -259,6 +261,7 @@ export type Database = {
           customer_message?: string | null
           customer_name?: string
           customer_phone?: string
+          deadline?: string | null
           id?: string
           order_number?: string
           status?: string

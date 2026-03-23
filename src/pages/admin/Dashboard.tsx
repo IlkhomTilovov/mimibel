@@ -33,6 +33,7 @@ interface OrderStats {
   cancelled: number;
   todayNew: number;
   todayTotal: number;
+  overdue: number;
 }
 
 interface RecentOrder {
@@ -62,6 +63,7 @@ export default function Dashboard() {
     cancelled: 0,
     todayNew: 0,
     todayTotal: 0,
+    overdue: 0,
   });
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>({
@@ -101,8 +103,7 @@ export default function Dashboard() {
 
       if (error) throw error;
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const now = new Date();
 
       const orderStats: OrderStats = {
         total: orders?.length || 0,
@@ -113,12 +114,20 @@ export default function Dashboard() {
         todayNew: orders?.filter(o => {
           const orderDate = new Date(o.created_at);
           orderDate.setHours(0, 0, 0, 0);
-          return orderDate.getTime() === today.getTime() && o.status === 'new';
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          return orderDate.getTime() === todayStart.getTime() && o.status === 'new';
         }).length || 0,
         todayTotal: orders?.filter(o => {
           const orderDate = new Date(o.created_at);
           orderDate.setHours(0, 0, 0, 0);
-          return orderDate.getTime() === today.getTime();
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          return orderDate.getTime() === todayStart.getTime();
+        }).length || 0,
+        overdue: orders?.filter(o => {
+          if (!o.deadline || o.status === 'completed' || o.status === 'cancelled') return false;
+          return new Date(o.deadline) < now;
         }).length || 0,
       };
 
@@ -269,6 +278,26 @@ export default function Dashboard() {
             </div>
             <Button asChild variant="outline" size="sm">
               <Link to="/admin/settings">Sozlash</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Overdue Orders Alert */}
+      {stats.overdue > 0 && (
+        <Card className="border-red-300 bg-red-50">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center">
+              <AlertTriangle className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-red-900">
+                {stats.overdue} ta buyurtma muddati o'tib ketgan!
+              </p>
+              <p className="text-sm text-red-700">Buyurtmalarni tekshiring va mijozlarga xabar bering</p>
+            </div>
+            <Button asChild size="sm" variant="destructive">
+              <Link to="/admin/orders">Ko'rish</Link>
             </Button>
           </CardContent>
         </Card>
