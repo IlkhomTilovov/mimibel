@@ -390,7 +390,14 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
                       <span className="font-bold">{formatPrice(totalPrice)}</span>
                     </div>
                     {cart.map(item => (
-                      <div key={item.product.id} className="flex items-center justify-between text-sm">
+                      <div key={item.product.id} className="flex items-center gap-3 text-sm">
+                        {item.product.images && item.product.images[0] ? (
+                          <img src={item.product.images[0]} className="h-10 w-10 rounded object-cover flex-shrink-0" alt="" />
+                        ) : (
+                          <div className="h-10 w-10 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                            <Package className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
                         <span className="flex-1 truncate">{item.product.name_uz}</span>
                         <div className="flex items-center gap-2">
                           <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, -1)}>
