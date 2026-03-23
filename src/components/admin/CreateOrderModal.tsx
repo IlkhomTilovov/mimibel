@@ -186,7 +186,7 @@ export function CreateOrderModal({ open, onOpenChange, onOrderCreated }: CreateO
   });
 
   const canProceedToProducts = customerName.trim().length >= 2 && customerPhone.length >= 12;
-  const canSubmit = cart.length > 0;
+  const canSubmit = cart.length > 0 && !!deadline;
 
   const handleSubmit = async () => {
     if (!canSubmit || submitting) return;
