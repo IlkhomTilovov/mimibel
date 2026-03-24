@@ -17,6 +17,8 @@ import {
   ClipboardList,
   Settings2,
   Warehouse,
+  Receipt,
+  BarChart3,
   LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,10 +36,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard, module: 'dashboard' },
+  { title: 'CRM Hisobot', url: '/admin/crm', icon: BarChart3, module: 'dashboard' },
   { title: 'Buyurtmalar', url: '/admin/orders', icon: ShoppingCart, module: 'orders' },
   { title: 'Toifalar', url: '/admin/categories', icon: FolderTree, module: 'categories' },
   { title: 'Mahsulotlar', url: '/admin/products', icon: Package, module: 'products' },
   { title: 'Mijozlar', url: '/admin/customers', icon: Users, module: 'customers' },
+  { title: 'Xarajatlar', url: '/admin/expenses', icon: Receipt, module: 'expenses' },
   { title: 'Sayt kontenti', url: '/admin/content', icon: FileText, module: 'siteContent' },
   { title: 'Checkout formasi', url: '/admin/checkout-form', icon: ClipboardList, module: 'siteContent' },
   { title: 'Mavzular', url: '/admin/themes', icon: Palette, module: 'themes' },

@@ -16,7 +16,9 @@ import {
   Clock,
   X,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  Receipt,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -79,9 +81,20 @@ interface Order {
   customer_message: string | null;
   status: string;
   total_price: number | null;
+  cost_price: number | null;
+  address: string | null;
   created_at: string;
   deadline: string | null;
   order_items?: OrderItem[];
+}
+
+interface OrderExpense {
+  id: string;
+  order_id: string;
+  amount: number;
+  type: string;
+  note: string | null;
+  created_at: string;
 }
 
 interface TelegramSettings {
@@ -107,6 +120,18 @@ const STATUS_CONFIG = {
     label: 'Bekor qilindi', 
     className: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300' 
   },
+  sotildi: {
+    label: 'Sotildi',
+    className: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300'
+  },
+  sotilmadi: {
+    label: 'Sotilmadi',
+    className: 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300'
+  },
+  keyinroq_sotildi: {
+    label: 'Keyinroq sotildi',
+    className: 'bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-900/30 dark:text-violet-300'
+  },
 };
 
 export default function Orders() {
@@ -121,8 +146,13 @@ export default function Orders() {
   const [telegramSettings, setTelegramSettings] = useState<TelegramSettings | null>(null);
   const [sendingTelegram, setSendingTelegram] = useState(false);
   const [createOrderOpen, setCreateOrderOpen] = useState(false);
+  const [orderExpenses, setOrderExpenses] = useState<OrderExpense[]>([]);
+  const [expAmount, setExpAmount] = useState('');
+  const [expType, setExpType] = useState('transport');
+  const [expNote, setExpNote] = useState('');
+  const [addingExpense, setAddingExpense] = useState(false);
   const { toast } = useToast();
-  const { user, isSeller, isAdmin } = useAuth();
+  const { user, isSeller, isAdmin, hasPermission } = useAuth();
 
   useEffect(() => {
     fetchOrders();
@@ -194,22 +224,48 @@ export default function Orders() {
 
   const fetchOrderDetails = async (orderId: string) => {
     try {
-      const { data: orderItems, error } = await supabase
-        .from('order_items')
-        .select('*')
-        .eq('order_id', orderId);
+      const [itemsRes, expRes] = await Promise.all([
+        supabase.from('order_items').select('*').eq('order_id', orderId),
+        supabase.from('order_expenses').select('*').eq('order_id', orderId).order('created_at', { ascending: false }),
+      ]);
 
-      if (error) throw error;
+      if (itemsRes.error) throw itemsRes.error;
 
       const order = orders.find(o => o.id === orderId);
       if (order) {
         setSelectedOrder({
           ...order,
-          order_items: orderItems as OrderItem[],
+          order_items: itemsRes.data as OrderItem[],
         });
+        setOrderExpenses((expRes.data as OrderExpense[]) || []);
       }
     } catch (error) {
       console.error('Error fetching order details:', error);
+    }
+  };
+
+  const addOrderExpense = async () => {
+    if (!selectedOrder || !expAmount || Number(expAmount) <= 0) return;
+    setAddingExpense(true);
+    try {
+      const { error } = await supabase.from('order_expenses').insert({
+        order_id: selectedOrder.id,
+        amount: Number(expAmount),
+        type: expType,
+        note: expNote || null,
+        created_by: user?.id || null,
+      });
+      if (error) throw error;
+      toast({ title: 'Muvaffaqiyat', description: 'Xarajat qo\'shildi' });
+      setExpAmount('');
+      setExpNote('');
+      // Refresh expenses
+      const { data } = await supabase.from('order_expenses').select('*').eq('order_id', selectedOrder.id).order('created_at', { ascending: false });
+      setOrderExpenses((data as OrderExpense[]) || []);
+    } catch (error: any) {
+      toast({ title: 'Xatolik', description: error.message, variant: 'destructive' });
+    } finally {
+      setAddingExpense(false);
     }
   };
 
@@ -541,6 +597,9 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                   <SelectItem value="in_progress">Jarayonda</SelectItem>
                   <SelectItem value="completed">Bajarildi</SelectItem>
                   <SelectItem value="cancelled">Bekor qilindi</SelectItem>
+                  <SelectItem value="sotildi">Sotildi</SelectItem>
+                  <SelectItem value="sotilmadi">Sotilmadi</SelectItem>
+                  <SelectItem value="keyinroq_sotildi">Keyinroq sotildi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -777,6 +836,9 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                         <SelectItem value="in_progress">Jarayonda</SelectItem>
                         <SelectItem value="completed">Bajarildi</SelectItem>
                         <SelectItem value="cancelled">Bekor qilindi</SelectItem>
+                        <SelectItem value="sotildi">Sotildi</SelectItem>
+                        <SelectItem value="sotilmadi">Sotilmadi</SelectItem>
+                        <SelectItem value="keyinroq_sotildi">Keyinroq sotildi</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -834,14 +896,81 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                 </div>
               </div>
 
-              {/* Total */}
-              {selectedOrder.total_price && (
-                <div className="border-t pt-4">
-                  <div className="flex justify-between items-center text-lg">
-                    <span className="font-medium">Jami summa:</span>
-                    <span className="text-xl font-bold text-primary">
-                      {formatPrice(selectedOrder.total_price)}
+              {/* Total & Profit */}
+              <div className="border-t pt-4 space-y-2">
+                {selectedOrder.total_price && (
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Sotuv narxi:</span>
+                    <span className="font-bold text-primary">{formatPrice(selectedOrder.total_price)}</span>
+                  </div>
+                )}
+                {isAdmin && selectedOrder.cost_price != null && selectedOrder.cost_price > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Tannarx:</span>
+                    <span className="text-red-600">{formatPrice(selectedOrder.cost_price)}</span>
+                  </div>
+                )}
+                {isAdmin && orderExpenses.length > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Buyurtma xarajatlari:</span>
+                    <span className="text-red-600">{formatPrice(orderExpenses.reduce((s, e) => s + e.amount, 0))}</span>
+                  </div>
+                )}
+                {isAdmin && selectedOrder.total_price && (
+                  <div className="flex justify-between items-center bg-muted/50 rounded-lg px-3 py-2">
+                    <span className="font-bold">Foyda:</span>
+                    <span className={`font-bold ${
+                      (selectedOrder.total_price - (selectedOrder.cost_price || 0) - orderExpenses.reduce((s, e) => s + e.amount, 0)) >= 0
+                        ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {formatPrice(selectedOrder.total_price - (selectedOrder.cost_price || 0) - orderExpenses.reduce((s, e) => s + e.amount, 0))}
                     </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Order Expenses */}
+              {!isSeller && (
+                <div>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Receipt className="h-4 w-4" />
+                    Buyurtma xarajatlari ({orderExpenses.length})
+                  </h3>
+                  {orderExpenses.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {orderExpenses.map(exp => (
+                        <div key={exp.id} className="flex justify-between items-center p-2 bg-muted/50 rounded text-sm">
+                          <div>
+                            <Badge variant="outline" className="mr-2">{exp.type}</Badge>
+                            {exp.note && <span className="text-muted-foreground">{exp.note}</span>}
+                          </div>
+                          <span className="font-semibold text-red-600">{formatPrice(exp.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      type="number"
+                      placeholder="Summa"
+                      value={expAmount}
+                      onChange={e => setExpAmount(e.target.value)}
+                      className="w-28"
+                      min="1"
+                    />
+                    <Select value={expType} onValueChange={setExpType}>
+                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="transport">Transport</SelectItem>
+                        <SelectItem value="material">Material</SelectItem>
+                        <SelectItem value="labor">Ishchi</SelectItem>
+                        <SelectItem value="other">Boshqa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input placeholder="Izoh" value={expNote} onChange={e => setExpNote(e.target.value)} className="flex-1" />
+                    <Button size="sm" onClick={addOrderExpense} disabled={addingExpense}>
+                      {addingExpense ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </div>
               )}

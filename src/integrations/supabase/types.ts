@@ -164,6 +164,7 @@ export type Database = {
           name: string | null
           notes: string | null
           phone: string
+          referral: string | null
           updated_at: string
         }
         Insert: {
@@ -172,6 +173,7 @@ export type Database = {
           name?: string | null
           notes?: string | null
           phone: string
+          referral?: string | null
           updated_at?: string
         }
         Update: {
@@ -180,9 +182,78 @@ export type Database = {
           name?: string | null
           notes?: string | null
           phone?: string
+          referral?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          note: string | null
+          type: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          note?: string | null
+          type?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          note?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      order_expenses: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          order_id: string
+          type: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id: string
+          type?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_expenses_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {
@@ -227,6 +298,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          address: string | null
+          cost_price: number | null
           created_at: string
           created_by_user_id: string | null
           customer_id: string | null
@@ -241,6 +314,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
+          cost_price?: number | null
           created_at?: string
           created_by_user_id?: string | null
           customer_id?: string | null
@@ -255,6 +330,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
+          cost_price?: number | null
           created_at?: string
           created_by_user_id?: string | null
           customer_id?: string | null
