@@ -42,6 +42,8 @@ import SystemSettings from "./pages/admin/SystemSettings";
 import Themes from "./pages/admin/Themes";
 import CheckoutFormSettings from "./pages/admin/CheckoutFormSettings";
 import Inventory from "./pages/admin/Inventory";
+import Expenses from "./pages/admin/Expenses";
+import CrmDashboard from "./pages/admin/CrmDashboard";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +73,11 @@ const App = () => (
                               <Dashboard />
                             </ProtectedRoute>
                           } />
+                          <Route path="crm" element={
+                            <ProtectedRoute module="dashboard">
+                              <CrmDashboard />
+                            </ProtectedRoute>
+                          } />
                           <Route path="orders" element={
                             <ProtectedRoute module="orders">
                               <Orders />
@@ -89,6 +96,11 @@ const App = () => (
                           <Route path="customers" element={
                             <ProtectedRoute module="customers">
                               <Customers />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="expenses" element={
+                            <ProtectedRoute module="expenses">
+                              <Expenses />
                             </ProtectedRoute>
                           } />
                           <Route path="content" element={
