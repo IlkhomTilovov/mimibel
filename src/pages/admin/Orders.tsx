@@ -79,9 +79,20 @@ interface Order {
   customer_message: string | null;
   status: string;
   total_price: number | null;
+  cost_price: number | null;
+  address: string | null;
   created_at: string;
   deadline: string | null;
   order_items?: OrderItem[];
+}
+
+interface OrderExpense {
+  id: string;
+  order_id: string;
+  amount: number;
+  type: string;
+  note: string | null;
+  created_at: string;
 }
 
 interface TelegramSettings {
