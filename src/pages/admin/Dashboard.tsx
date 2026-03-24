@@ -378,17 +378,23 @@ export default function Dashboard() {
           <p className="text-sm text-muted-foreground">Biznes analitikasi — real vaqtda</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-[130px] h-9">
-              <CalendarIcon className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DATE_FILTERS.map(f => (
-                <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-9 gap-1.5 text-sm">
+                <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                {format(selectedDate, 'dd.MM.yyyy')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => d && setSelectedDate(d)}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Barcha status" /></SelectTrigger>
             <SelectContent>
