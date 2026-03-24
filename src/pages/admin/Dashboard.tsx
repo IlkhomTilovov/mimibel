@@ -217,10 +217,15 @@ export default function Dashboard() {
     // Order expense map
     const orderExpMap: Record<string, number> = {};
     const orderExpTypeMap: Record<string, number> = {};
+    const orderExpDetailMap: Record<string, { total: number; byType: Record<string, number>; items: OrderExpenseRow[] }> = {};
     orderExpenses.forEach(oe => {
       if (filteredOrderIds.has(oe.order_id)) {
         orderExpMap[oe.order_id] = (orderExpMap[oe.order_id] || 0) + oe.amount;
         orderExpTypeMap[oe.type] = (orderExpTypeMap[oe.type] || 0) + oe.amount;
+        if (!orderExpDetailMap[oe.order_id]) orderExpDetailMap[oe.order_id] = { total: 0, byType: {}, items: [] };
+        orderExpDetailMap[oe.order_id].total += oe.amount;
+        orderExpDetailMap[oe.order_id].byType[oe.type] = (orderExpDetailMap[oe.order_id].byType[oe.type] || 0) + oe.amount;
+        orderExpDetailMap[oe.order_id].items.push(oe);
       }
     });
 
