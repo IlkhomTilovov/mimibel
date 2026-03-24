@@ -16,7 +16,9 @@ import {
   Clock,
   X,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  Receipt,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
