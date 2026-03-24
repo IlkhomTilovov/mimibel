@@ -4,8 +4,10 @@ import {
   ShoppingCart, TrendingUp, TrendingDown, DollarSign, Package,
   AlertTriangle, Bell, RefreshCw, ArrowRight, Plus, Users,
   Warehouse, Receipt, BarChart3, Loader2, Calendar as CalendarIcon,
-  ArrowUpRight, ArrowDownRight
+  ArrowUpRight, ArrowDownRight, ChevronDown, ChevronRight,
+  Layers, Truck, Hammer, Clock
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
