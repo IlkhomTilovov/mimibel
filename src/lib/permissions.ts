@@ -20,6 +20,7 @@ export interface RolePermissions {
   admins: Permission;
   telegram: Permission;
   systemSettings: Permission;
+  inventory: Permission;
 }
 
 // Define permissions for each role
