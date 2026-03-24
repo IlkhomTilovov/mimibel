@@ -48,6 +48,11 @@ import Expenses from "./pages/admin/Expenses";
 import CrmDashboard from "./pages/admin/CrmDashboard";
 import OrderExpenses from "./pages/admin/OrderExpenses";
 
+function MetaPixelInjector() {
+  useMetaPixel();
+  return null;
+}
+
 const queryClient = new QueryClient();
 
 const App = () => (
