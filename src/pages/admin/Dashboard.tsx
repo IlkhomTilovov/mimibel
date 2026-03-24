@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -143,6 +144,7 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState('all');
+  const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
 
   const { isAdmin, isManager, user } = useAuth();
   const navigate = useNavigate();
@@ -459,15 +461,15 @@ export default function Dashboard() {
                   {overdueOrders.slice(0, 5).map(o => {
                     const daysLate = Math.ceil((now.getTime() - new Date(o.deadline!).getTime()) / 86400000);
                     return (
-                      <div key={o.id} className="flex items-center justify-between text-sm pl-6">
+                      <div key={o.id} className="flex items-center justify-between text-sm pl-6 cursor-pointer hover:bg-destructive/5 rounded px-2 py-1 transition-colors" onClick={() => setDetailOrderId(o.id)}>
                         <span>
                           <span className="font-medium">{o.order_number}</span>
                           <span className="text-muted-foreground"> — {o.customer_name}</span>
                         </span>
                         <div className="flex items-center gap-2">
                           <Badge variant="destructive" className="text-xs">{daysLate} kun kechikdi</Badge>
-                          <Button size="sm" variant="outline" className="h-6 text-xs" asChild>
-                            <Link to="/admin/orders">Ko'rish</Link>
+                          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); setDetailOrderId(o.id); }}>
+                            Ko'rish
                           </Button>
                         </div>
                       </div>
@@ -488,15 +490,15 @@ export default function Dashboard() {
                   {urgentOrders.slice(0, 5).map(o => {
                     const hoursLeft = Math.max(0, Math.ceil((new Date(o.deadline!).getTime() - now.getTime()) / 3600000));
                     return (
-                      <div key={o.id} className="flex items-center justify-between text-sm pl-6">
+                      <div key={o.id} className="flex items-center justify-between text-sm pl-6 cursor-pointer hover:bg-amber-100/50 dark:hover:bg-amber-950/30 rounded px-2 py-1 transition-colors" onClick={() => setDetailOrderId(o.id)}>
                         <span>
                           <span className="font-medium">{o.order_number}</span>
                           <span className="text-muted-foreground"> — {o.customer_name}</span>
                         </span>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs border-amber-300 text-amber-700">{hoursLeft} soat qoldi</Badge>
-                          <Button size="sm" variant="outline" className="h-6 text-xs" asChild>
-                            <Link to="/admin/orders">Ko'rish</Link>
+                          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); setDetailOrderId(o.id); }}>
+                            Ko'rish
                           </Button>
                         </div>
                       </div>
@@ -760,7 +762,7 @@ export default function Dashboard() {
                   const profit = (order.total_price || 0) - (order.cost_price || 0) - orderExp;
 
                   return (
-                    <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setDetailOrderId(order.id)}>
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                           <ShoppingCart className="h-3.5 w-3.5 text-primary" />
@@ -961,6 +963,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+      {/* ─── Order Detail Modal ─────────────────────── */}
+      <OrderDetailModal
+        orderId={detailOrderId}
+        onClose={() => setDetailOrderId(null)}
+        onOrderUpdated={fetchAll}
+      />
     </div>
   );
 }
