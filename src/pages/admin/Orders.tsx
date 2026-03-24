@@ -144,8 +144,13 @@ export default function Orders() {
   const [telegramSettings, setTelegramSettings] = useState<TelegramSettings | null>(null);
   const [sendingTelegram, setSendingTelegram] = useState(false);
   const [createOrderOpen, setCreateOrderOpen] = useState(false);
+  const [orderExpenses, setOrderExpenses] = useState<OrderExpense[]>([]);
+  const [expAmount, setExpAmount] = useState('');
+  const [expType, setExpType] = useState('transport');
+  const [expNote, setExpNote] = useState('');
+  const [addingExpense, setAddingExpense] = useState(false);
   const { toast } = useToast();
-  const { user, isSeller, isAdmin } = useAuth();
+  const { user, isSeller, isAdmin, hasPermission } = useAuth();
 
   useEffect(() => {
     fetchOrders();
