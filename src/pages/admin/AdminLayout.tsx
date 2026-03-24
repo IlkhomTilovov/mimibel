@@ -24,6 +24,7 @@ import {
   Globe,
   Wrench,
   TrendingUp,
+  DollarSign,
   LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
