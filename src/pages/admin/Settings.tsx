@@ -259,6 +259,7 @@ export default function Settings() {
     } finally {
       setSavingTags(false);
     }
+  };
 
   const testTelegramConnection = async () => {
     if (!telegram.bot_token || !telegram.chat_id) {
