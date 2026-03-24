@@ -564,61 +564,12 @@ export default function Dashboard() {
 
       {/* ─── Charts ───────────────────────────────────── */}
       {canSeeProfits && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue vs Profit Line Chart */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                Tushum va Foyda
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {analytics.dailyData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={analytics.dailyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                    <YAxis fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(0)}K` : v} />
-                    <Tooltip formatter={(value: number) => formatPrice(value)} />
-                    <Line type="monotone" dataKey="revenue" name="Tushum" stroke="#22c55e" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="profit" name="Foyda" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                    <Legend />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <EmptyChart />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Expenses Pie */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Receipt className="h-4 w-4 text-muted-foreground" />
-                Xarajatlar taqsimoti
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {analytics.expTypeData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie data={analytics.expTypeData} cx="50%" cy="50%" outerRadius={90} innerRadius={50} dataKey="value" paddingAngle={2}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                      {analytics.expTypeData.map((_, i) => (
-                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => formatPrice(value)} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <EmptyChart />
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        <AnalyticsChart
+          orders={orders}
+          orderExpenses={orderExpenses}
+          globalExpenses={globalExpenses}
+          onOrderClick={(id) => setDetailOrderId(id)}
+        />
       )}
 
       {/* Status Bar Chart (for all roles) */}
