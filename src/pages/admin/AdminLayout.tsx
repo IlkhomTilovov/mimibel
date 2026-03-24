@@ -24,6 +24,7 @@ import {
   Globe,
   Wrench,
   TrendingUp,
+  DollarSign,
   LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -76,7 +77,8 @@ const navGroups: NavGroup[] = [
     label: 'Moliya',
     icon: Receipt,
     items: [
-      { title: 'Xarajatlar', url: '/admin/expenses', icon: Receipt, module: 'expenses' },
+      { title: 'Buyurtma xarajatlari', url: '/admin/order-expenses', icon: DollarSign, module: 'expenses' },
+      { title: 'Umumiy xarajatlar', url: '/admin/expenses', icon: Receipt, module: 'expenses' },
     ],
   },
   {

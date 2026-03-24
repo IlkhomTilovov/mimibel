@@ -44,6 +44,7 @@ import CheckoutFormSettings from "./pages/admin/CheckoutFormSettings";
 import Inventory from "./pages/admin/Inventory";
 import Expenses from "./pages/admin/Expenses";
 import CrmDashboard from "./pages/admin/CrmDashboard";
+import OrderExpenses from "./pages/admin/OrderExpenses";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +102,11 @@ const App = () => (
                           <Route path="expenses" element={
                             <ProtectedRoute module="expenses">
                               <Expenses />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="order-expenses" element={
+                            <ProtectedRoute module="expenses">
+                              <OrderExpenses />
                             </ProtectedRoute>
                           } />
                           <Route path="content" element={
