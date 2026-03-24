@@ -835,6 +835,9 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                         <SelectItem value="in_progress">Jarayonda</SelectItem>
                         <SelectItem value="completed">Bajarildi</SelectItem>
                         <SelectItem value="cancelled">Bekor qilindi</SelectItem>
+                        <SelectItem value="sotildi">Sotildi</SelectItem>
+                        <SelectItem value="sotilmadi">Sotilmadi</SelectItem>
+                        <SelectItem value="keyinroq_sotildi">Keyinroq sotildi</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
