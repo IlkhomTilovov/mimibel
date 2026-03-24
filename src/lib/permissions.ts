@@ -21,6 +21,7 @@ export interface RolePermissions {
   telegram: Permission;
   systemSettings: Permission;
   inventory: Permission;
+  expenses: Permission;
 }
 
 // Define permissions for each role
@@ -38,6 +39,7 @@ export const rolePermissions: Record<AppRole, RolePermissions> = {
     telegram: { view: false, create: false, edit: false, delete: false },
     systemSettings: { view: false, create: false, edit: false, delete: false },
     inventory: { view: true, create: false, edit: false, delete: false },
+    expenses: { view: false, create: false, edit: false, delete: false },
   },
   
   // MANAGER: Categories, products, content, telegram
@@ -53,6 +55,7 @@ export const rolePermissions: Record<AppRole, RolePermissions> = {
     telegram: { view: true, create: true, edit: true, delete: true },
     systemSettings: { view: false, create: false, edit: false, delete: false },
     inventory: { view: true, create: true, edit: true, delete: false },
+    expenses: { view: true, create: true, edit: false, delete: false },
   },
   
   // ADMIN: Full access
@@ -68,6 +71,7 @@ export const rolePermissions: Record<AppRole, RolePermissions> = {
     telegram: { view: true, create: true, edit: true, delete: true },
     systemSettings: { view: true, create: true, edit: true, delete: true },
     inventory: { view: true, create: true, edit: true, delete: true },
+    expenses: { view: true, create: true, edit: true, delete: true },
   },
 };
 
@@ -118,6 +122,7 @@ export const navItemConfigs: NavItemConfig[] = [
   { title: 'Toifalar', url: '/admin/categories', icon: 'FolderTree', module: 'categories' },
   { title: 'Mahsulotlar', url: '/admin/products', icon: 'Package', module: 'products' },
   { title: 'Mijozlar', url: '/admin/customers', icon: 'Users', module: 'customers' },
+  { title: 'Xarajatlar', url: '/admin/expenses', icon: 'Receipt', module: 'expenses' },
   { title: 'Sayt kontenti', url: '/admin/content', icon: 'FileText', module: 'siteContent' },
   { title: 'Mavzular', url: '/admin/themes', icon: 'Palette', module: 'themes' },
   { title: 'Adminlar', url: '/admin/admins', icon: 'Shield', module: 'admins' },
