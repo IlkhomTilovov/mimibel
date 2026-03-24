@@ -61,6 +61,10 @@ export default function Settings() {
         chat_id: settings['telegram_chat_id'] || '',
         enabled: settings['telegram_enabled'] === 'true',
       });
+      setMetaPixel({
+        code: settings['meta_pixel_code'] || '',
+        enabled: settings['meta_pixel_enabled'] === 'true',
+      });
     } catch (error) {
       console.error('Error fetching settings:', error);
     } finally {
