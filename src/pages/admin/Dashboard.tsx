@@ -346,7 +346,7 @@ export default function Dashboard() {
       globalExpByType,
       filteredOrders,
     };
-  }, [orders, orderExpenses, globalExpenses, orderItems, dateFilter, statusFilter]);
+  }, [orders, orderExpenses, globalExpenses, orderItems, selectedDate, statusFilter]);
 
   // ─── Loading State ──────────────────────────────────────
   if (loading) {
