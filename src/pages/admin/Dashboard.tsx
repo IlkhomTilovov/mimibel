@@ -1,224 +1,338 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  Package, 
-  ShoppingCart, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  ArrowRight, 
-  Plus,
-  Settings,
-  Palette,
-  AlertTriangle,
-  Bell,
-  Bot,
-  Globe,
-  Activity,
-  TrendingUp,
-  Phone,
-  RefreshCw
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  ShoppingCart, TrendingUp, TrendingDown, DollarSign, Package,
+  AlertTriangle, Bell, RefreshCw, ArrowRight, Plus, Users,
+  Warehouse, Receipt, BarChart3, Loader2, Calendar as CalendarIcon,
+  ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line
+} from 'recharts';
+import { format, subDays, subMonths, startOfMonth, endOfMonth, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
 
-interface OrderStats {
-  total: number;
-  new: number;
-  inProgress: number;
-  completed: number;
-  cancelled: number;
-  todayNew: number;
-  todayTotal: number;
-  overdue: number;
-}
-
-interface RecentOrder {
+// ─── Types ───────────────────────────────────────────────
+interface OrderRow {
   id: string;
   order_number: string;
+  status: string;
+  total_price: number | null;
+  cost_price: number | null;
+  created_at: string;
   customer_name: string;
   customer_phone: string;
-  status: string;
-  created_at: string;
-  total_price: number | null;
 }
 
-interface SystemStatus {
-  telegramEnabled: boolean;
-  activeTheme: string | null;
-  enabledLanguages: string[];
-  totalProducts: number;
-  totalCategories: number;
+interface OrderExpenseRow {
+  order_id: string;
+  amount: number;
+  type: string;
 }
 
+interface ExpenseRow {
+  id: string;
+  date: string;
+  type: string;
+  amount: number;
+}
+
+interface OrderItemRow {
+  product_id: string;
+  product_name_snapshot: string;
+  quantity: number;
+  price_snapshot: number | null;
+  order_id: string;
+}
+
+interface LowStockProduct {
+  id: string;
+  name_uz: string;
+  current_stock: number;
+}
+
+// ─── Constants ───────────────────────────────────────────
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  new: { label: 'Yangi', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+  in_progress: { label: 'Jarayonda', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  completed: { label: 'Bajarildi', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  cancelled: { label: 'Bekor', className: 'bg-rose-100 text-rose-800 border-rose-200' },
+  sotildi: { label: 'Sotildi', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  sotilmadi: { label: 'Sotilmadi', className: 'bg-rose-100 text-rose-800 border-rose-200' },
+  keyinroq_sotildi: { label: 'Keyinroq sotildi', className: 'bg-violet-100 text-violet-800 border-violet-200' },
+};
+
+const CHART_COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'];
+
+const DATE_FILTERS = [
+  { value: 'today', label: 'Bugun' },
+  { value: 'week', label: 'Bu hafta' },
+  { value: 'month', label: 'Bu oy' },
+  { value: '3months', label: '3 oy' },
+  { value: '6months', label: '6 oy' },
+  { value: 'year', label: '1 yil' },
+];
+
+// ─── Helpers ─────────────────────────────────────────────
+const formatPrice = (n: number) => new Intl.NumberFormat('uz-UZ').format(Math.round(n)) + " so'm";
+
+const getDateRange = (filter: string): { start: Date; end: Date } => {
+  const now = new Date();
+  const end = endOfDay(now);
+  switch (filter) {
+    case 'today': return { start: startOfDay(now), end };
+    case 'week': return { start: startOfWeek(now, { weekStartsOn: 1 }), end };
+    case 'month': return { start: startOfMonth(now), end };
+    case '3months': return { start: startOfMonth(subMonths(now, 2)), end };
+    case '6months': return { start: startOfMonth(subMonths(now, 5)), end };
+    case 'year': return { start: startOfMonth(subMonths(now, 11)), end };
+    default: return { start: startOfMonth(now), end };
+  }
+};
+
+const getStatusBadge = (status: string) => {
+  const config = STATUS_CONFIG[status] || { label: status, className: 'bg-muted text-muted-foreground' };
+  return <Badge variant="outline" className={cn('text-xs font-medium', config.className)}>{config.label}</Badge>;
+};
+
+const formatRelativeDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (minutes < 60) return `${minutes} daqiqa oldin`;
+  if (hours < 24) return `${hours} soat oldin`;
+  if (days < 7) return `${days} kun oldin`;
+  return format(date, 'dd.MM.yyyy');
+};
+
+// ─── Component ───────────────────────────────────────────
 export default function Dashboard() {
-  const [stats, setStats] = useState<OrderStats>({
-    total: 0,
-    new: 0,
-    inProgress: 0,
-    completed: 0,
-    cancelled: 0,
-    todayNew: 0,
-    todayTotal: 0,
-    overdue: 0,
-  });
-  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
-  const [systemStatus, setSystemStatus] = useState<SystemStatus>({
-    telegramEnabled: false,
-    activeTheme: null,
-    enabledLanguages: ['uz', 'ru'],
-    totalProducts: 0,
-    totalCategories: 0,
-  });
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [orderExpenses, setOrderExpenses] = useState<OrderExpenseRow[]>([]);
+  const [globalExpenses, setGlobalExpenses] = useState<ExpenseRow[]>([]);
+  const [orderItems, setOrderItems] = useState<OrderItemRow[]>([]);
+  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { currentTheme } = useTheme();
+  const [dateFilter, setDateFilter] = useState('month');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+  const { isAdmin, isManager, user } = useAuth();
+  const navigate = useNavigate();
+  const canSeeProfits = isAdmin || isManager;
 
-  const fetchAllData = async () => {
+  // ─── Data Fetching ──────────────────────────────────────
+  const fetchAll = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        fetchStats(),
-        fetchSystemStatus(),
+      const [ordersRes, orderExpRes, expRes, itemsRes] = await Promise.all([
+        supabase.from('orders').select('id, order_number, status, total_price, cost_price, created_at, customer_name, customer_phone').order('created_at', { ascending: false }),
+        supabase.from('order_expenses').select('order_id, amount, type'),
+        supabase.from('expenses').select('*'),
+        supabase.from('order_items').select('product_id, product_name_snapshot, quantity, price_snapshot, order_id'),
       ]);
+
+      setOrders((ordersRes.data as OrderRow[]) || []);
+      setOrderExpenses((orderExpRes.data as OrderExpenseRow[]) || []);
+      setGlobalExpenses((expRes.data as ExpenseRow[]) || []);
+      setOrderItems((itemsRes.data as OrderItemRow[]) || []);
+
+      // Fetch low stock products
+      const { data: products } = await supabase.from('products').select('id, name_uz, initial_stock');
+      const { data: movements } = await supabase.from('stock_movements').select('product_id, type, quantity');
+
+      if (products && movements) {
+        const aggMap = new Map<string, { total_in: number; total_out: number }>();
+        movements.forEach((m: any) => {
+          const existing = aggMap.get(m.product_id) || { total_in: 0, total_out: 0 };
+          if (m.type === 'in') existing.total_in += m.quantity;
+          else existing.total_out += m.quantity;
+          aggMap.set(m.product_id, existing);
+        });
+
+        const lowStock = products
+          .map((p: any) => {
+            const agg = aggMap.get(p.id) || { total_in: 0, total_out: 0 };
+            return { id: p.id, name_uz: p.name_uz, current_stock: (p.initial_stock || 0) + agg.total_in - agg.total_out };
+          })
+          .filter(p => p.current_stock < 5)
+          .sort((a, b) => a.current_stock - b.current_stock);
+
+        setLowStockProducts(lowStock);
+      }
+    } catch (error) {
+      console.error('Dashboard fetch error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
-  const fetchStats = async () => {
-    try {
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
-      if (error) throw error;
+  // ─── Realtime Subscriptions ─────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel('dashboard-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_expenses' }, () => fetchAll())
+      .subscribe();
 
-      const now = new Date();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchAll]);
 
-      const orderStats: OrderStats = {
-        total: orders?.length || 0,
-        new: orders?.filter(o => o.status === 'new').length || 0,
-        inProgress: orders?.filter(o => o.status === 'in_progress').length || 0,
-        completed: orders?.filter(o => o.status === 'completed').length || 0,
-        cancelled: orders?.filter(o => o.status === 'cancelled').length || 0,
-        todayNew: orders?.filter(o => {
-          const orderDate = new Date(o.created_at);
-          orderDate.setHours(0, 0, 0, 0);
-          const todayStart = new Date();
-          todayStart.setHours(0, 0, 0, 0);
-          return orderDate.getTime() === todayStart.getTime() && o.status === 'new';
-        }).length || 0,
-        todayTotal: orders?.filter(o => {
-          const orderDate = new Date(o.created_at);
-          orderDate.setHours(0, 0, 0, 0);
-          const todayStart = new Date();
-          todayStart.setHours(0, 0, 0, 0);
-          return orderDate.getTime() === todayStart.getTime();
-        }).length || 0,
-        overdue: orders?.filter(o => {
-          if (!o.deadline || o.status === 'completed' || o.status === 'cancelled') return false;
-          return new Date(o.deadline) < now;
-        }).length || 0,
-      };
+  // ─── Analytics Computation ──────────────────────────────
+  const analytics = useMemo(() => {
+    const { start, end } = getDateRange(dateFilter);
 
-      setStats(orderStats);
-      setRecentOrders((orders || []).slice(0, 10));
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
-
-  const fetchSystemStatus = async () => {
-    try {
-      // Fetch telegram enabled setting
-      const { data: telegramData } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'telegram_enabled')
-        .maybeSingle();
-
-      const telegramEnabled = telegramData?.value === 'true';
-
-      // Fetch system settings
-      const { data: systemData } = await supabase
-        .from('system_settings')
-        .select('languages_enabled')
-        .limit(1)
-        .maybeSingle();
-
-      // Fetch products count
-      const { count: productsCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch categories count
-      const { count: categoriesCount } = await supabase
-        .from('categories')
-        .select('*', { count: 'exact', head: true });
-
-      setSystemStatus({
-        telegramEnabled,
-        activeTheme: currentTheme?.name || null,
-        enabledLanguages: systemData?.languages_enabled || ['uz', 'ru'],
-        totalProducts: productsCount || 0,
-        totalCategories: categoriesCount || 0,
-      });
-    } catch (error) {
-      console.error('Error fetching system status:', error);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; className?: string }> = {
-      new: { variant: 'default', label: 'Yangi', className: 'bg-blue-500' },
-      in_progress: { variant: 'secondary', label: 'Jarayonda', className: 'bg-yellow-500 text-white' },
-      completed: { variant: 'outline', label: 'Bajarildi', className: 'border-green-500 text-green-600' },
-      cancelled: { variant: 'destructive', label: 'Bekor qilindi' },
-    };
-    const config = variants[status] || variants.new;
-    return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 60) return `${minutes} daqiqa oldin`;
-    if (hours < 24) return `${hours} soat oldin`;
-    if (days < 7) return `${days} kun oldin`;
-    
-    return date.toLocaleDateString('uz-UZ', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
+    let filteredOrders = orders.filter(o => {
+      const d = new Date(o.created_at);
+      return d >= start && d <= end;
     });
-  };
 
-  const formatPrice = (price: number | null) => {
-    if (!price) return '—';
-    return new Intl.NumberFormat('uz-UZ').format(price) + " so'm";
-  };
+    if (statusFilter !== 'all') {
+      filteredOrders = filteredOrders.filter(o => o.status === statusFilter);
+    }
 
+    const filteredOrderIds = new Set(filteredOrders.map(o => o.id));
+
+    // Order expense map
+    const orderExpMap: Record<string, number> = {};
+    const orderExpTypeMap: Record<string, number> = {};
+    orderExpenses.forEach(oe => {
+      if (filteredOrderIds.has(oe.order_id)) {
+        orderExpMap[oe.order_id] = (orderExpMap[oe.order_id] || 0) + oe.amount;
+        orderExpTypeMap[oe.type] = (orderExpTypeMap[oe.type] || 0) + oe.amount;
+      }
+    });
+
+    // Revenue & Profit
+    let totalRevenue = 0, totalCost = 0, totalOrderExp = 0;
+    filteredOrders.forEach(o => {
+      const orderExp = orderExpMap[o.id] || 0;
+      totalOrderExp += orderExp;
+
+      if (['completed', 'sotildi'].includes(o.status)) {
+        totalRevenue += o.total_price || 0;
+        totalCost += o.cost_price || 0;
+      } else if (['sotilmadi', 'cancelled'].includes(o.status)) {
+        totalCost += o.cost_price || 0;
+      } else if (o.status === 'keyinroq_sotildi') {
+        totalRevenue += o.total_price || 0;
+      }
+    });
+
+    const filteredGlobalExpenses = globalExpenses.filter(e => {
+      const d = new Date(e.date);
+      return d >= start && d <= end;
+    });
+    const totalGlobalExp = filteredGlobalExpenses.reduce((s, e) => s + e.amount, 0);
+    const totalExpenses = totalCost + totalOrderExp + totalGlobalExp;
+    const netProfit = totalRevenue - totalExpenses;
+
+    // Daily chart data (last 30 days or filtered range)
+    const dayCount = Math.min(Math.ceil((end.getTime() - start.getTime()) / 86400000), 90);
+    const dailyData: { date: string; revenue: number; profit: number }[] = [];
+    for (let i = dayCount - 1; i >= 0; i--) {
+      const day = subDays(end, i);
+      const dayStart = startOfDay(day);
+      const dayEnd = endOfDay(day);
+      const label = format(day, 'dd.MM');
+
+      const dayOrders = filteredOrders.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= dayStart && d <= dayEnd;
+      });
+      const dayRev = dayOrders
+        .filter(o => ['completed', 'sotildi', 'keyinroq_sotildi'].includes(o.status))
+        .reduce((s, o) => s + (o.total_price || 0), 0);
+      const dayCost = dayOrders.reduce((s, o) => s + (o.cost_price || 0) + (orderExpMap[o.id] || 0), 0);
+
+      dailyData.push({ date: label, revenue: dayRev, profit: dayRev - dayCost });
+    }
+
+    // Status distribution
+    const statusDist = filteredOrders.reduce((acc, o) => {
+      acc[o.status] = (acc[o.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const statusChartData = Object.entries(statusDist).map(([status, count]) => ({
+      name: STATUS_CONFIG[status]?.label || status,
+      value: count,
+    }));
+
+    // Expense breakdown (global + order expenses)
+    const expByType: Record<string, number> = { ...orderExpTypeMap };
+    filteredGlobalExpenses.forEach(e => {
+      expByType[e.type] = (expByType[e.type] || 0) + e.amount;
+    });
+    const expTypeData = Object.entries(expByType)
+      .map(([type, amount]) => ({ name: type, value: amount }))
+      .sort((a, b) => b.value - a.value);
+
+    // Top products
+    const productSales = new Map<string, { name: string; quantity: number; revenue: number }>();
+    orderItems.forEach(item => {
+      if (filteredOrderIds.has(item.order_id)) {
+        const existing = productSales.get(item.product_id) || { name: item.product_name_snapshot, quantity: 0, revenue: 0 };
+        existing.quantity += item.quantity;
+        existing.revenue += (item.price_snapshot || 0) * item.quantity;
+        productSales.set(item.product_id, existing);
+      }
+    });
+    const topProducts = Array.from(productSales.values())
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+
+    // Today's new orders
+    const todayStart = startOfDay(new Date());
+    const todayNew = orders.filter(o => new Date(o.created_at) >= todayStart && o.status === 'new').length;
+
+    return {
+      totalOrders: filteredOrders.length,
+      totalRevenue,
+      totalExpenses,
+      netProfit,
+      totalGlobalExp,
+      todayNew,
+      dailyData,
+      statusChartData,
+      expTypeData,
+      topProducts,
+      recentOrders: filteredOrders.slice(0, 8),
+      orderExpMap,
+    };
+  }, [orders, orderExpenses, globalExpenses, orderItems, dateFilter, statusFilter]);
+
+  // ─── Loading State ──────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-muted-foreground">Ma'lumotlar yuklanmoqda...</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-9 w-32" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i}><CardContent className="p-5"><Skeleton className="h-16 w-full" /></CardContent></Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card><CardContent className="p-6"><Skeleton className="h-72 w-full" /></CardContent></Card>
+          <Card><CardContent className="p-6"><Skeleton className="h-72 w-full" /></CardContent></Card>
         </div>
       </div>
     );
@@ -226,317 +340,417 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* ─── Header & Filters ─────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Umumiy ko'rinish va statistika</p>
+          <p className="text-sm text-muted-foreground">Biznes analitikasi — real vaqtda</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={fetchAllData}
-          disabled={refreshing}
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          Yangilash
-        </Button>
+        <div className="flex flex-wrap gap-2 items-center">
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger className="w-[130px] h-9">
+              <CalendarIcon className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DATE_FILTERS.map(f => (
+                <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Barcha status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha status</SelectItem>
+              {Object.entries(STATUS_CONFIG).map(([key, val]) => (
+                <SelectItem key={key} value={key}>{val.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={fetchAll} disabled={refreshing} className="h-9">
+            <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", refreshing && "animate-spin")} />
+            Yangilash
+          </Button>
+        </div>
       </div>
 
-      {/* Alerts - New Orders */}
-      {stats.todayNew > 0 && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-              <Bell className="h-5 w-5 text-white" />
+      {/* ─── Alert: Today's New Orders ────────────────── */}
+      {analytics.todayNew > 0 && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardContent className="flex items-center gap-4 py-3 px-4">
+            <div className="h-9 w-9 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+              <Bell className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1">
-              <p className="font-medium text-blue-900">
-                Bugun {stats.todayNew} ta yangi buyurtma bor!
-              </p>
-              <p className="text-sm text-blue-700">Buyurtmalarni ko'rib chiqing</p>
+              <p className="font-medium text-blue-900 text-sm">Bugun {analytics.todayNew} ta yangi buyurtma!</p>
             </div>
-            <Button asChild size="sm">
+            <Button asChild size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-100">
               <Link to="/admin/orders">Ko'rish</Link>
             </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* System Warning */}
-      {!systemStatus.telegramEnabled && (
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="h-10 w-10 rounded-full bg-yellow-500 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-yellow-900">
-                Telegram bot ulanmagan
-              </p>
-              <p className="text-sm text-yellow-700">Buyurtma xabarnomalarini olish uchun sozlang</p>
-            </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/admin/settings">Sozlash</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Overdue Orders Alert */}
-      {stats.overdue > 0 && (
-        <Card className="border-red-300 bg-red-50">
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-red-900">
-                {stats.overdue} ta buyurtma muddati o'tib ketgan!
-              </p>
-              <p className="text-sm text-red-700">Buyurtmalarni tekshiring va mijozlarga xabar bering</p>
-            </div>
-            <Button asChild size="sm" variant="destructive">
-              <Link to="/admin/orders">Ko'rish</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Jami buyurtmalar</CardTitle>
-            <ShoppingCart className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.total}</div>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              Bugun: +{stats.todayTotal}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Yangi buyurtmalar</CardTitle>
-            <Clock className="h-5 w-5 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600">{stats.new}</div>
-            <p className="text-sm text-muted-foreground">Kutilmoqda</p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Bajarilgan</CardTitle>
-            <CheckCircle className="h-5 w-5 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
-            <p className="text-sm text-muted-foreground">Muvaffaqiyatli</p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Mahsulotlar</CardTitle>
-            <Package className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{systemStatus.totalProducts}</div>
-            <p className="text-sm text-muted-foreground">{systemStatus.totalCategories} ta toifada</p>
-          </CardContent>
-        </Card>
+      {/* ─── KPI Cards ────────────────────────────────── */}
+      <div className={cn("grid gap-4", canSeeProfits ? "grid-cols-2 lg:grid-cols-5" : "grid-cols-2 lg:grid-cols-3")}>
+        <KPICard
+          title="Buyurtmalar"
+          value={analytics.totalOrders.toString()}
+          icon={ShoppingCart}
+          iconBg="bg-blue-100"
+          iconColor="text-blue-600"
+          subtitle={`Bugun: +${analytics.todayNew}`}
+        />
+        <KPICard
+          title="Tushum"
+          value={formatPrice(analytics.totalRevenue)}
+          icon={TrendingUp}
+          iconBg="bg-emerald-100"
+          iconColor="text-emerald-600"
+          valueColor="text-emerald-600"
+        />
+        {canSeeProfits && (
+          <>
+            <KPICard
+              title="Sof foyda"
+              value={formatPrice(analytics.netProfit)}
+              icon={DollarSign}
+              iconBg={analytics.netProfit >= 0 ? "bg-emerald-100" : "bg-rose-100"}
+              iconColor={analytics.netProfit >= 0 ? "text-emerald-600" : "text-rose-600"}
+              valueColor={analytics.netProfit >= 0 ? "text-emerald-600" : "text-rose-600"}
+              highlight={true}
+              highlightPositive={analytics.netProfit >= 0}
+            />
+            <KPICard
+              title="Xarajatlar"
+              value={formatPrice(analytics.totalExpenses)}
+              icon={TrendingDown}
+              iconBg="bg-rose-100"
+              iconColor="text-rose-600"
+              valueColor="text-rose-600"
+            />
+          </>
+        )}
+        <KPICard
+          title="Kam zaxira"
+          value={lowStockProducts.length.toString()}
+          icon={AlertTriangle}
+          iconBg={lowStockProducts.length > 0 ? "bg-amber-100" : "bg-muted"}
+          iconColor={lowStockProducts.length > 0 ? "text-amber-600" : "text-muted-foreground"}
+          valueColor={lowStockProducts.length > 0 ? "text-amber-600" : undefined}
+          subtitle="< 5 dona"
+        />
       </div>
 
-      {/* Quick Actions & Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Tezkor harakatlar</CardTitle>
-            <CardDescription>Tez-tez ishlatiladigan amallar</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-3">
-            <Button asChild>
-              <Link to="/admin/orders">
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Buyurtmalarni ko'rish
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/admin/products">
-                <Plus className="mr-2 h-4 w-4" />
-                Mahsulot qo'shish
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/admin/settings">
-                <Settings className="mr-2 h-4 w-4" />
-                Telegram sozlamalari
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/admin/themes">
-                <Palette className="mr-2 h-4 w-4" />
-                Mavzular
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* ─── Charts ───────────────────────────────────── */}
+      {canSeeProfits && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Revenue vs Profit Line Chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                Tushum va Foyda
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {analytics.dailyData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={analytics.dailyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} tickFormatter={v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(0)}K` : v} />
+                    <Tooltip formatter={(value: number) => formatPrice(value)} />
+                    <Line type="monotone" dataKey="revenue" name="Tushum" stroke="#22c55e" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="profit" name="Foyda" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                    <Legend />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <EmptyChart />
+              )}
+            </CardContent>
+          </Card>
 
+          {/* Expenses Pie */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-muted-foreground" />
+                Xarajatlar taqsimoti
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {analytics.expTypeData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={analytics.expTypeData} cx="50%" cy="50%" outerRadius={90} innerRadius={50} dataKey="value" paddingAngle={2}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                      {analytics.expTypeData.map((_, i) => (
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => formatPrice(value)} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <EmptyChart />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Status Bar Chart (for all roles) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Status bo'yicha</CardTitle>
-            <CardDescription>Buyurtmalar holati</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Buyurtmalar holati</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-2 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  <span className="text-sm">Yangi</span>
-                </div>
-                <Badge variant="secondary">{stats.new}</Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                  <span className="text-sm">Jarayonda</span>
-                </div>
-                <Badge variant="secondary">{stats.inProgress}</Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <span className="text-sm">Bajarildi</span>
-                </div>
-                <Badge variant="outline" className="border-green-500 text-green-600">{stats.completed}</Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-red-500" />
-                  <span className="text-sm">Bekor qilindi</span>
-                </div>
-                <Badge variant="destructive">{stats.cancelled}</Badge>
-              </div>
-            </div>
+            {analytics.statusChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={analytics.statusChartData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis dataKey="name" type="category" fontSize={12} tick={{ fill: 'hsl(var(--muted-foreground))' }} width={110} />
+                  <Tooltip />
+                  <Bar dataKey="value" name="Soni" radius={[0, 4, 4, 0]}>
+                    {analytics.statusChartData.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart />
+            )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* System Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Tizim holati
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 bg-muted/50 rounded-lg text-center">
-              <Bot className={`h-6 w-6 mx-auto mb-2 ${systemStatus.telegramEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
-              <p className="text-sm font-medium">Telegram Bot</p>
-              <Badge variant={systemStatus.telegramEnabled ? 'default' : 'secondary'} className="mt-1">
-                {systemStatus.telegramEnabled ? 'Ulangan' : 'Ulanmagan'}
-              </Badge>
-            </div>
-            <div className="p-4 bg-muted/50 rounded-lg text-center">
-              <Palette className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <p className="text-sm font-medium">Faol mavzu</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {systemStatus.activeTheme || 'Tanlanmagan'}
-              </p>
-            </div>
-            <div className="p-4 bg-muted/50 rounded-lg text-center">
-              <Globe className="h-6 w-6 mx-auto mb-2 text-blue-500" />
-              <p className="text-sm font-medium">Tillar</p>
-              <div className="flex gap-1 justify-center mt-1">
-                {systemStatus.enabledLanguages.map((lang) => (
-                  <Badge key={lang} variant="outline" className="text-xs">
-                    {lang.toUpperCase()}
-                  </Badge>
+        {/* Top Products */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              Top mahsulotlar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {analytics.topProducts.length > 0 ? (
+              <div className="space-y-3">
+                {analytics.topProducts.map((p, i) => (
+                  <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-xs font-bold text-muted-foreground w-5 shrink-0">#{i + 1}</span>
+                      <span className="text-sm font-medium truncate">{p.name}</span>
+                    </div>
+                    <div className="text-right shrink-0 ml-2">
+                      <span className="text-sm font-semibold">{p.quantity} dona</span>
+                      {canSeeProfits && (
+                        <p className="text-xs text-muted-foreground">{formatPrice(p.revenue)}</p>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-            <div className="p-4 bg-muted/50 rounded-lg text-center">
-              <Package className="h-6 w-6 mx-auto mb-2 text-orange-500" />
-              <p className="text-sm font-medium">Katalog</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {systemStatus.totalProducts} mahsulot
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+                <Package className="h-10 w-10 mb-2 opacity-30" />
+                <p className="text-sm">Ma'lumot yo'q</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Recent Orders */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg">So'nggi buyurtmalar</CardTitle>
-            <CardDescription>Oxirgi 10 ta buyurtma</CardDescription>
-          </div>
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/admin/orders" className="flex items-center gap-1">
-              Barchasini ko'rish
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {recentOrders.length === 0 ? (
-            <div className="text-center py-12">
-              <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Hali buyurtmalar yo'q</p>
-              <p className="text-sm text-muted-foreground">
-                Yangi buyurtmalar bu yerda ko'rinadi
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {recentOrders.map((order) => (
-                <div 
-                  key={order.id} 
-                  className="flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <ShoppingCart className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{order.order_number}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{order.customer_name}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {order.customer_phone}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {getStatusBadge(order.status)}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatDate(order.created_at)}
+      {/* ─── Low Stock Alert ──────────────────────────── */}
+      {lowStockProducts.length > 0 && (
+        <Card className="border-amber-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-amber-700">
+              <AlertTriangle className="h-4 w-4" />
+              Kam zaxira — {lowStockProducts.length} ta mahsulot
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {lowStockProducts.slice(0, 6).map(p => (
+                <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-amber-50 border border-amber-100">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{p.name_uz}</p>
+                    <p className={cn("text-xs font-semibold", p.current_stock <= 0 ? "text-rose-600" : "text-amber-600")}>
+                      {p.current_stock} dona qoldi
                     </p>
-                    {order.total_price && (
-                      <p className="text-sm font-medium text-primary mt-1">
-                        {formatPrice(order.total_price)}
-                      </p>
-                    )}
                   </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 ml-2 h-7 text-xs border-amber-300 hover:bg-amber-100"
+                    onClick={() => navigate('/admin/inventory')}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Kirim
+                  </Button>
                 </div>
               ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {lowStockProducts.length > 6 && (
+              <Button variant="link" size="sm" asChild className="mt-2 px-0 text-amber-700">
+                <Link to="/admin/inventory">Barchasini ko'rish ({lowStockProducts.length}) →</Link>
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ─── Quick Actions + Recent Orders ────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Tezkor harakatlar</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <QuickAction icon={ShoppingCart} label="Buyurtma yaratish" to="/admin/orders" />
+            {canSeeProfits && <QuickAction icon={Receipt} label="Xarajat qo'shish" to="/admin/expenses" />}
+            <QuickAction icon={Warehouse} label="Zaxira qo'shish" to="/admin/inventory" />
+            <QuickAction icon={Users} label="Mijoz qo'shish" to="/admin/customers" />
+            <QuickAction icon={Package} label="Mahsulot qo'shish" to="/admin/products" />
+          </CardContent>
+        </Card>
+
+        {/* Recent Orders */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base">So'nggi buyurtmalar</CardTitle>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/admin/orders" className="flex items-center gap-1 text-xs">
+                Barchasi <ArrowRight className="h-3 w-3" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {analytics.recentOrders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <ShoppingCart className="h-10 w-10 mb-2 opacity-30" />
+                <p className="text-sm">Buyurtmalar yo'q</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {analytics.recentOrders.map(order => {
+                  const orderExp = analytics.orderExpMap[order.id] || 0;
+                  const profit = (order.total_price || 0) - (order.cost_price || 0) - orderExp;
+
+                  return (
+                    <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <ShoppingCart className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">{order.order_number}</p>
+                          <p className="text-xs text-muted-foreground truncate">{order.customer_name}</p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0 ml-2 space-y-1">
+                        {getStatusBadge(order.status)}
+                        {order.total_price && (
+                          <p className="text-xs font-medium">{formatPrice(order.total_price)}</p>
+                        )}
+                        {canSeeProfits && ['completed', 'sotildi'].includes(order.status) && (
+                          <p className={cn("text-xs font-medium flex items-center justify-end gap-0.5", profit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                            {profit >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                            {formatPrice(Math.abs(profit))}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-muted-foreground">{formatRelativeDate(order.created_at)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ─── Financial Breakdown (Admin) ──────────────── */}
+      {canSeeProfits && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Moliyaviy taqsimot</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <FinRow label="Umumiy tushum" value={analytics.totalRevenue} positive />
+              <FinRow label="Xarajatlar (jami)" value={analytics.totalExpenses} />
+              <FinRow label="— Umumiy xarajatlar" value={analytics.totalGlobalExp} sub />
+              <div className="flex justify-between py-3 px-4 rounded-lg bg-muted/50 mt-2">
+                <span className="font-bold">SOF FOYDA</span>
+                <span className={cn("font-bold", analytics.netProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                  {formatPrice(analytics.netProfit)}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ─── Sub-Components ──────────────────────────────────────
+
+function KPICard({ title, value, icon: Icon, iconBg, iconColor, valueColor, subtitle, highlight, highlightPositive }: {
+  title: string; value: string; icon: any; iconBg: string; iconColor: string;
+  valueColor?: string; subtitle?: string; highlight?: boolean; highlightPositive?: boolean;
+}) {
+  return (
+    <Card className={cn("hover:shadow-md transition-shadow", highlight && (highlightPositive ? "border-emerald-200" : "border-rose-200"))}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{title}</p>
+            <p className={cn("text-xl font-bold mt-1 truncate", valueColor)}>{value}</p>
+            {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+          </div>
+          <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", iconBg)}>
+            <Icon className={cn("h-4 w-4", iconColor)} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function QuickAction({ icon: Icon, label, to }: { icon: any; label: string; to: string }) {
+  return (
+    <Button variant="ghost" className="w-full justify-start gap-3 h-10" asChild>
+      <Link to={to}>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm">{label}</span>
+      </Link>
+    </Button>
+  );
+}
+
+function FinRow({ label, value, positive, sub }: { label: string; value: number; positive?: boolean; sub?: boolean }) {
+  return (
+    <div className={cn("flex justify-between py-2 border-b border-border/50", sub && "pl-4")}>
+      <span className={cn("text-sm", sub ? "text-muted-foreground" : "font-medium")}>{label}</span>
+      <span className={cn("text-sm font-semibold", positive ? "text-emerald-600" : "text-rose-600")}>
+        {positive ? '+' : '-'}{formatPrice(value)}
+      </span>
+    </div>
+  );
+}
+
+function EmptyChart() {
+  return (
+    <div className="flex flex-col items-center justify-center h-[250px] text-muted-foreground">
+      <BarChart3 className="h-10 w-10 mb-2 opacity-20" />
+      <p className="text-sm">Ma'lumot yo'q</p>
     </div>
   );
 }
