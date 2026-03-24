@@ -37,11 +37,17 @@ export default function Settings() {
     code: '',
     enabled: false,
   });
+  const [metaTags, setMetaTags] = useState<MetaTagSettings>({
+    tags: '',
+    enabled: false,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingPixel, setSavingPixel] = useState(false);
+  const [savingTags, setSavingTags] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [tagValidationError, setTagValidationError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
