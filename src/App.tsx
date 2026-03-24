@@ -121,6 +121,11 @@ const App = () => (
                               <SystemSettings />
                             </ProtectedRoute>
                           } />
+                          <Route path="inventory" element={
+                            <ProtectedRoute module="inventory">
+                              <Inventory />
+                            </ProtectedRoute>
+                          } />
                         </Route>
                       
                       {/* Public Routes */}
