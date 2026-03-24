@@ -35,6 +35,7 @@ interface OrderRow {
   created_at: string;
   customer_name: string;
   customer_phone: string;
+  deadline: string | null;
 }
 
 interface OrderExpenseRow {
