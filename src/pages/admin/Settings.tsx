@@ -1,16 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Save, Send, CheckCircle, XCircle } from 'lucide-react';
+import { Save, Send, CheckCircle, XCircle, Code, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface TelegramSettings {
   bot_token: string;
   chat_id: string;
+  enabled: boolean;
+}
+
+interface MetaPixelSettings {
+  code: string;
   enabled: boolean;
 }
 
