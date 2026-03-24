@@ -292,6 +292,7 @@ export type Database = {
           id: string
           images: string[] | null
           in_stock: boolean | null
+          initial_stock: number
           is_active: boolean | null
           is_featured: boolean | null
           is_followed: boolean | null
@@ -327,6 +328,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           in_stock?: boolean | null
+          initial_stock?: number
           is_active?: boolean | null
           is_featured?: boolean | null
           is_followed?: boolean | null
@@ -362,6 +364,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           in_stock?: boolean | null
+          initial_stock?: number
           is_active?: boolean | null
           is_featured?: boolean | null
           is_followed?: boolean | null
@@ -483,6 +486,47 @@ export type Database = {
           value_uz?: string | null
         }
         Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          product_id: string
+          quantity: number
+          reason: string
+          type: Database["public"]["Enums"]["stock_movement_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          product_id: string
+          quantity: number
+          reason: string
+          type: Database["public"]["Enums"]["stock_movement_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          product_id?: string
+          quantity?: number
+          reason?: string
+          type?: Database["public"]["Enums"]["stock_movement_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_settings: {
         Row: {
@@ -627,6 +671,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_product_stock: { Args: { p_product_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -637,6 +682,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "editor" | "seller" | "manager"
+      stock_movement_type: "in" | "out"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -765,6 +811,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "editor", "seller", "manager"],
+      stock_movement_type: ["in", "out"],
     },
   },
 } as const

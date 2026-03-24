@@ -209,6 +209,30 @@ Deno.serve(async (req) => {
 
     console.log('Order completed successfully:', orderData.order_number);
 
+    // Auto stock reduction: insert stock_movements for each order item
+    try {
+      const stockMovements = orderItems.map(item => ({
+        product_id: item.product_id,
+        type: 'out',
+        quantity: item.quantity,
+        reason: 'sale',
+        note: `Buyurtma #${orderData.order_number}`,
+        created_by: null,
+      }));
+
+      const { error: stockError } = await supabase
+        .from('stock_movements')
+        .insert(stockMovements);
+
+      if (stockError) {
+        console.error('Stock movement error (non-blocking):', stockError);
+      } else {
+        console.log('Stock movements created for order:', orderData.order_number);
+      }
+    } catch (stockErr) {
+      console.error('Stock reduction error (non-blocking):', stockErr);
+    }
+
     // Send Telegram notification (async, don't wait for it)
     try {
       const telegramPayload = {

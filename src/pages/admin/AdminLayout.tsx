@@ -16,6 +16,7 @@ import {
   FileText,
   ClipboardList,
   Settings2,
+  Warehouse,
   LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,7 @@ const navItems: NavItem[] = [
   { title: 'Adminlar', url: '/admin/admins', icon: Shield, module: 'admins' },
   { title: 'Telegram', url: '/admin/settings', icon: Settings, module: 'telegram' },
   { title: 'Tizim sozlamalari', url: '/admin/system', icon: Settings2, module: 'systemSettings' },
+  { title: 'Ombor', url: '/admin/inventory', icon: Warehouse, module: 'inventory' },
 ];
 
 export default function AdminLayout() {
