@@ -141,6 +141,50 @@ export default function Settings() {
     }
   };
 
+  const saveMetaPixelSettings = async () => {
+    setSavingPixel(true);
+    try {
+      const updates = [
+        { key: 'meta_pixel_code', value: metaPixel.code },
+        { key: 'meta_pixel_enabled', value: metaPixel.enabled.toString() },
+      ];
+
+      for (const update of updates) {
+        const { data: existing } = await supabase
+          .from('settings')
+          .select('id')
+          .eq('key', update.key)
+          .single();
+
+        if (existing) {
+          const { error } = await supabase
+            .from('settings')
+            .update({ value: update.value, updated_at: new Date().toISOString() })
+            .eq('key', update.key);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('settings')
+            .insert({ key: update.key, value: update.value });
+          if (error) throw error;
+        }
+      }
+
+      toast({
+        title: 'Muvaffaqiyat',
+        description: 'Meta Pixel sozlamalari saqlandi. Sayt yangilanganida ishga tushadi.',
+      });
+    } catch (error) {
+      console.error('Error saving meta pixel:', error);
+      toast({
+        title: 'Xatolik',
+        description: 'Meta Pixel saqlashda xatolik',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingPixel(false);
+    }
+
   const testTelegramConnection = async () => {
     if (!telegram.bot_token || !telegram.chat_id) {
       toast({
