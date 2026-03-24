@@ -36,9 +36,12 @@ interface OrderRow {
 }
 
 interface OrderExpenseRow {
+  id: string;
   order_id: string;
   amount: number;
   type: string;
+  note: string | null;
+  created_at: string;
 }
 
 interface ExpenseRow {
