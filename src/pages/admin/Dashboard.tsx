@@ -762,7 +762,7 @@ export default function Dashboard() {
                   const profit = (order.total_price || 0) - (order.cost_price || 0) - orderExp;
 
                   return (
-                    <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setDetailOrderId(order.id)}>
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                           <ShoppingCart className="h-3.5 w-3.5 text-primary" />
