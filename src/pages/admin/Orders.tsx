@@ -118,6 +118,18 @@ const STATUS_CONFIG = {
     label: 'Bekor qilindi', 
     className: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300' 
   },
+  sotildi: {
+    label: 'Sotildi',
+    className: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300'
+  },
+  sotilmadi: {
+    label: 'Sotilmadi',
+    className: 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300'
+  },
+  keyinroq_sotildi: {
+    label: 'Keyinroq sotildi',
+    className: 'bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-900/30 dark:text-violet-300'
+  },
 };
 
 export default function Orders() {
