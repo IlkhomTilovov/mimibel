@@ -44,6 +44,7 @@ import CheckoutFormSettings from "./pages/admin/CheckoutFormSettings";
 import Inventory from "./pages/admin/Inventory";
 import Expenses from "./pages/admin/Expenses";
 import CrmDashboard from "./pages/admin/CrmDashboard";
+import OrderExpenses from "./pages/admin/OrderExpenses";
 
 const queryClient = new QueryClient();
 
