@@ -129,13 +129,6 @@ export function AnalyticsChart({ orders, orderExpenses, globalExpenses, onOrderC
         end: endOfDay(d),
         label: format(d, 'dd.MM'),
       }));
-    } else if (groupBy === 'week') {
-      const weeks = eachWeekOfInterval({ start: rangeStart, end: rangeEnd }, { weekStartsOn: 1 });
-      intervals = weeks.map(w => ({
-        start: startOfWeek(w, { weekStartsOn: 1 }),
-        end: endOfWeek(w, { weekStartsOn: 1 }),
-        label: format(w, 'dd.MM'),
-      }));
     } else {
       const months = eachMonthOfInterval({ start: rangeStart, end: rangeEnd });
       intervals = months.map(m => ({
