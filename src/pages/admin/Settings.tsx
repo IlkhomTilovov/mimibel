@@ -333,6 +333,7 @@ export default function Settings() {
         <TabsList>
           <TabsTrigger value="telegram">Telegram</TabsTrigger>
           <TabsTrigger value="meta-pixel">Meta Pixel</TabsTrigger>
+          <TabsTrigger value="meta-tags">Domain Verification</TabsTrigger>
         </TabsList>
 
         <TabsContent value="telegram" className="space-y-6">
