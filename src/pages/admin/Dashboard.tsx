@@ -461,15 +461,15 @@ export default function Dashboard() {
                   {overdueOrders.slice(0, 5).map(o => {
                     const daysLate = Math.ceil((now.getTime() - new Date(o.deadline!).getTime()) / 86400000);
                     return (
-                      <div key={o.id} className="flex items-center justify-between text-sm pl-6">
+                      <div key={o.id} className="flex items-center justify-between text-sm pl-6 cursor-pointer hover:bg-destructive/5 rounded px-2 py-1 transition-colors" onClick={() => setDetailOrderId(o.id)}>
                         <span>
                           <span className="font-medium">{o.order_number}</span>
                           <span className="text-muted-foreground"> — {o.customer_name}</span>
                         </span>
                         <div className="flex items-center gap-2">
                           <Badge variant="destructive" className="text-xs">{daysLate} kun kechikdi</Badge>
-                          <Button size="sm" variant="outline" className="h-6 text-xs" asChild>
-                            <Link to="/admin/orders">Ko'rish</Link>
+                          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); setDetailOrderId(o.id); }}>
+                            Ko'rish
                           </Button>
                         </div>
                       </div>
