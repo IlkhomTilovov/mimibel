@@ -76,6 +76,13 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   keyinroq_sotildi: { label: 'Keyinroq sotildi', className: 'bg-violet-100 text-violet-800 border-violet-200' },
 };
 
+const EXPENSE_TYPE_CONFIG = [
+  { value: 'material', label: 'Material', icon: Layers, color: '#3b82f6' },
+  { value: 'transport', label: 'Transport', icon: Truck, color: '#f59e0b' },
+  { value: 'labor', label: 'Ishchi', icon: Hammer, color: '#8b5cf6' },
+  { value: 'other', label: 'Boshqa', icon: DollarSign, color: '#64748b' },
+];
+
 const CHART_COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'];
 
 const DATE_FILTERS = [
