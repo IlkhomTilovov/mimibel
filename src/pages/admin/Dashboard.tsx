@@ -144,6 +144,7 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState('all');
+  const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
 
   const { isAdmin, isManager, user } = useAuth();
   const navigate = useNavigate();
