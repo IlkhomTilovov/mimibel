@@ -41,6 +41,7 @@ import Settings from "./pages/admin/Settings";
 import SystemSettings from "./pages/admin/SystemSettings";
 import Themes from "./pages/admin/Themes";
 import CheckoutFormSettings from "./pages/admin/CheckoutFormSettings";
+import Inventory from "./pages/admin/Inventory";
 
 const queryClient = new QueryClient();
 
