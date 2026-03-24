@@ -22,6 +22,8 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line
 } from 'recharts';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 // ─── Types ───────────────────────────────────────────────
 interface OrderRow {
@@ -138,7 +140,7 @@ export default function Dashboard() {
   const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [dateFilter, setDateFilter] = useState('month');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState('all');
 
   const { isAdmin, isManager, user } = useAuth();
@@ -208,7 +210,8 @@ export default function Dashboard() {
 
   // ─── Analytics Computation ──────────────────────────────
   const analytics = useMemo(() => {
-    const { start, end } = getDateRange(dateFilter);
+    const start = startOfDay(selectedDate);
+    const end = endOfDay(selectedDate);
 
     let filteredOrders = orders.filter(o => {
       const d = new Date(o.created_at);
@@ -343,7 +346,7 @@ export default function Dashboard() {
       globalExpByType,
       filteredOrders,
     };
-  }, [orders, orderExpenses, globalExpenses, orderItems, dateFilter, statusFilter]);
+  }, [orders, orderExpenses, globalExpenses, orderItems, selectedDate, statusFilter]);
 
   // ─── Loading State ──────────────────────────────────────
   if (loading) {
@@ -375,17 +378,23 @@ export default function Dashboard() {
           <p className="text-sm text-muted-foreground">Biznes analitikasi — real vaqtda</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-[130px] h-9">
-              <CalendarIcon className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DATE_FILTERS.map(f => (
-                <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-9 gap-1.5 text-sm">
+                <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                {format(selectedDate, 'dd.MM.yyyy')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => d && setSelectedDate(d)}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Barcha status" /></SelectTrigger>
             <SelectContent>
