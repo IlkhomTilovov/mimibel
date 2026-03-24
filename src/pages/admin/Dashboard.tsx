@@ -311,12 +311,19 @@ export default function Dashboard() {
     const todayStart = startOfDay(new Date());
     const todayNew = orders.filter(o => new Date(o.created_at) >= todayStart && o.status === 'new').length;
 
+    // Global expense by type
+    const globalExpByType: Record<string, number> = {};
+    filteredGlobalExpenses.forEach(e => {
+      globalExpByType[e.type] = (globalExpByType[e.type] || 0) + e.amount;
+    });
+
     return {
       totalOrders: filteredOrders.length,
       totalRevenue,
       totalExpenses,
       netProfit,
       totalGlobalExp,
+      totalOrderExp,
       todayNew,
       dailyData,
       statusChartData,
@@ -324,6 +331,10 @@ export default function Dashboard() {
       topProducts,
       recentOrders: filteredOrders.slice(0, 8),
       orderExpMap,
+      orderExpTypeMap,
+      orderExpDetailMap,
+      globalExpByType,
+      filteredOrders,
     };
   }, [orders, orderExpenses, globalExpenses, orderItems, dateFilter, statusFilter]);
 
