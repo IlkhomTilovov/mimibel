@@ -963,6 +963,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+      {/* ─── Order Detail Modal ─────────────────────── */}
+      <OrderDetailModal
+        orderId={detailOrderId}
+        onClose={() => setDetailOrderId(null)}
+        onOrderUpdated={fetchAll}
+      />
     </div>
   );
 }
