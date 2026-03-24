@@ -76,6 +76,10 @@ export default function Settings() {
         code: settings['meta_pixel_code'] || '',
         enabled: settings['meta_pixel_enabled'] === 'true',
       });
+      setMetaTags({
+        tags: settings['meta_verification_tags'] || '',
+        enabled: settings['meta_verification_enabled'] === 'true',
+      });
     } catch (error) {
       console.error('Error fetching settings:', error);
     } finally {
