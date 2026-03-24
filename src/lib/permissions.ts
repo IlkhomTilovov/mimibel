@@ -52,6 +52,7 @@ export const rolePermissions: Record<AppRole, RolePermissions> = {
     admins: { view: false, create: false, edit: false, delete: false },
     telegram: { view: true, create: true, edit: true, delete: true },
     systemSettings: { view: false, create: false, edit: false, delete: false },
+    inventory: { view: true, create: true, edit: true, delete: false },
   },
   
   // ADMIN: Full access
