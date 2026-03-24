@@ -895,14 +895,81 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                 </div>
               </div>
 
-              {/* Total */}
-              {selectedOrder.total_price && (
-                <div className="border-t pt-4">
-                  <div className="flex justify-between items-center text-lg">
-                    <span className="font-medium">Jami summa:</span>
-                    <span className="text-xl font-bold text-primary">
-                      {formatPrice(selectedOrder.total_price)}
+              {/* Total & Profit */}
+              <div className="border-t pt-4 space-y-2">
+                {selectedOrder.total_price && (
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Sotuv narxi:</span>
+                    <span className="font-bold text-primary">{formatPrice(selectedOrder.total_price)}</span>
+                  </div>
+                )}
+                {isAdmin && selectedOrder.cost_price != null && selectedOrder.cost_price > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Tannarx:</span>
+                    <span className="text-red-600">{formatPrice(selectedOrder.cost_price)}</span>
+                  </div>
+                )}
+                {isAdmin && orderExpenses.length > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Buyurtma xarajatlari:</span>
+                    <span className="text-red-600">{formatPrice(orderExpenses.reduce((s, e) => s + e.amount, 0))}</span>
+                  </div>
+                )}
+                {isAdmin && selectedOrder.total_price && (
+                  <div className="flex justify-between items-center bg-muted/50 rounded-lg px-3 py-2">
+                    <span className="font-bold">Foyda:</span>
+                    <span className={`font-bold ${
+                      (selectedOrder.total_price - (selectedOrder.cost_price || 0) - orderExpenses.reduce((s, e) => s + e.amount, 0)) >= 0
+                        ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {formatPrice(selectedOrder.total_price - (selectedOrder.cost_price || 0) - orderExpenses.reduce((s, e) => s + e.amount, 0))}
                     </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Order Expenses */}
+              {!isSeller && (
+                <div>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Receipt className="h-4 w-4" />
+                    Buyurtma xarajatlari ({orderExpenses.length})
+                  </h3>
+                  {orderExpenses.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {orderExpenses.map(exp => (
+                        <div key={exp.id} className="flex justify-between items-center p-2 bg-muted/50 rounded text-sm">
+                          <div>
+                            <Badge variant="outline" className="mr-2">{exp.type}</Badge>
+                            {exp.note && <span className="text-muted-foreground">{exp.note}</span>}
+                          </div>
+                          <span className="font-semibold text-red-600">{formatPrice(exp.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      type="number"
+                      placeholder="Summa"
+                      value={expAmount}
+                      onChange={e => setExpAmount(e.target.value)}
+                      className="w-28"
+                      min="1"
+                    />
+                    <Select value={expType} onValueChange={setExpType}>
+                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="transport">Transport</SelectItem>
+                        <SelectItem value="material">Material</SelectItem>
+                        <SelectItem value="labor">Ishchi</SelectItem>
+                        <SelectItem value="other">Boshqa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input placeholder="Izoh" value={expNote} onChange={e => setExpNote(e.target.value)} className="flex-1" />
+                    <Button size="sm" onClick={addOrderExpense} disabled={addingExpense}>
+                      {addingExpense ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </div>
               )}
