@@ -144,7 +144,7 @@ export default function Dashboard() {
     try {
       const [ordersRes, orderExpRes, expRes, itemsRes] = await Promise.all([
         supabase.from('orders').select('id, order_number, status, total_price, cost_price, created_at, customer_name, customer_phone').order('created_at', { ascending: false }),
-        supabase.from('order_expenses').select('order_id, amount, type'),
+        supabase.from('order_expenses').select('id, order_id, amount, type, note, created_at'),
         supabase.from('expenses').select('*'),
         supabase.from('order_items').select('product_id, product_name_snapshot, quantity, price_snapshot, order_id'),
       ]);
