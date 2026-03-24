@@ -268,7 +268,6 @@ export default function Orders() {
       setAddingExpense(false);
     }
   };
-  };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
