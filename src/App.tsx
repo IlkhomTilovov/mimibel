@@ -104,6 +104,11 @@ const App = () => (
                               <Expenses />
                             </ProtectedRoute>
                           } />
+                          <Route path="order-expenses" element={
+                            <ProtectedRoute module="expenses">
+                              <OrderExpenses />
+                            </ProtectedRoute>
+                          } />
                           <Route path="content" element={
                             <ProtectedRoute module="siteContent">
                               <SiteContent />
