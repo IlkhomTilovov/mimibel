@@ -184,6 +184,7 @@ export default function Settings() {
     } finally {
       setSavingPixel(false);
     }
+  };
 
   const testTelegramConnection = async () => {
     if (!telegram.bot_token || !telegram.chat_id) {
