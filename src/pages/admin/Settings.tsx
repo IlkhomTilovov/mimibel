@@ -28,8 +28,13 @@ export default function Settings() {
     chat_id: '',
     enabled: false,
   });
+  const [metaPixel, setMetaPixel] = useState<MetaPixelSettings>({
+    code: '',
+    enabled: false,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingPixel, setSavingPixel] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
   const { toast } = useToast();
