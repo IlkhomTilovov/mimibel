@@ -254,107 +254,200 @@ export default function Settings() {
         <p className="text-muted-foreground">Tizim sozlamalarini boshqaring</p>
       </div>
 
-      {/* Telegram Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-            </svg>
-            Telegram Bot
-          </CardTitle>
-          <CardDescription>
-            Yangi buyurtmalar haqida Telegram orqali xabar olish uchun botni sozlang
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="telegram-enabled">Telegram xabarlarini yoqish</Label>
-            <Switch
-              id="telegram-enabled"
-              checked={telegram.enabled}
-              onCheckedChange={(checked) => setTelegram(prev => ({ ...prev, enabled: checked }))}
-            />
-          </div>
+      <Tabs defaultValue="telegram" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="telegram">Telegram</TabsTrigger>
+          <TabsTrigger value="meta-pixel">Meta Pixel</TabsTrigger>
+        </TabsList>
 
-          <div className="space-y-2">
-            <Label htmlFor="bot-token">Bot Token</Label>
-            <Input
-              id="bot-token"
-              type="password"
-              placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
-              value={telegram.bot_token}
-              onChange={(e) => setTelegram(prev => ({ ...prev, bot_token: e.target.value }))}
-            />
-            <p className="text-xs text-muted-foreground">
-              @BotFather dan olingan bot token
-            </p>
-          </div>
+        <TabsContent value="telegram" className="space-y-6">
+          {/* Telegram Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                </svg>
+                Telegram Bot
+              </CardTitle>
+              <CardDescription>
+                Yangi buyurtmalar haqida Telegram orqali xabar olish uchun botni sozlang
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="telegram-enabled">Telegram xabarlarini yoqish</Label>
+                <Switch
+                  id="telegram-enabled"
+                  checked={telegram.enabled}
+                  onCheckedChange={(checked) => setTelegram(prev => ({ ...prev, enabled: checked }))}
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="chat-id">Chat ID</Label>
-            <Input
-              id="chat-id"
-              placeholder="-1001234567890"
-              value={telegram.chat_id}
-              onChange={(e) => setTelegram(prev => ({ ...prev, chat_id: e.target.value }))}
-            />
-            <p className="text-xs text-muted-foreground">
-              Guruh yoki kanal ID (minus bilan boshlanadi)
-            </p>
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="bot-token">Bot Token</Label>
+                <Input
+                  id="bot-token"
+                  type="password"
+                  placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+                  value={telegram.bot_token}
+                  onChange={(e) => setTelegram(prev => ({ ...prev, bot_token: e.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  @BotFather dan olingan bot token
+                </p>
+              </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button onClick={saveTelegramSettings} disabled={saving}>
-              <Save className="mr-2 h-4 w-4" />
-              {saving ? 'Saqlanmoqda...' : 'Saqlash'}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={testTelegramConnection}
-              disabled={testing}
-            >
-              {testing ? (
-                <div className="animate-spin h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full" />
-              ) : testResult === 'success' ? (
-                <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-              ) : testResult === 'error' ? (
-                <XCircle className="mr-2 h-4 w-4 text-red-500" />
-              ) : (
-                <Send className="mr-2 h-4 w-4" />
-              )}
-              Test xabar yuborish
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor="chat-id">Chat ID</Label>
+                <Input
+                  id="chat-id"
+                  placeholder="-1001234567890"
+                  value={telegram.chat_id}
+                  onChange={(e) => setTelegram(prev => ({ ...prev, chat_id: e.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Guruh yoki kanal ID (minus bilan boshlanadi)
+                </p>
+              </div>
 
-      {/* How to Setup Guide */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Telegram Bot sozlash yo'riqnomasi</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <h4 className="font-medium">1. Bot yaratish</h4>
-            <p className="text-sm text-muted-foreground">
-              Telegram da @BotFather ga yozing va /newbot buyrug'ini yuboring. Bot nomini va username kiriting.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <h4 className="font-medium">2. Token olish</h4>
-            <p className="text-sm text-muted-foreground">
-              BotFather sizga HTTP API token beradi. Uni yuqoridagi "Bot Token" maydoniga kiriting.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <h4 className="font-medium">3. Chat ID olish</h4>
-            <p className="text-sm text-muted-foreground">
-              Botni guruhga qo'shing va @getidsbot yoki @userinfobot dan guruh ID sini oling.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button onClick={saveTelegramSettings} disabled={saving}>
+                  <Save className="mr-2 h-4 w-4" />
+                  {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={testTelegramConnection}
+                  disabled={testing}
+                >
+                  {testing ? (
+                    <div className="animate-spin h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full" />
+                  ) : testResult === 'success' ? (
+                    <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" />
+                  ) : testResult === 'error' ? (
+                    <XCircle className="mr-2 h-4 w-4 text-destructive" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                  )}
+                  Test xabar yuborish
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* How to Setup Guide */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Telegram Bot sozlash yo'riqnomasi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-medium">1. Bot yaratish</h4>
+                <p className="text-sm text-muted-foreground">
+                  Telegram da @BotFather ga yozing va /newbot buyrug'ini yuboring. Bot nomini va username kiriting.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">2. Token olish</h4>
+                <p className="text-sm text-muted-foreground">
+                  BotFather sizga HTTP API token beradi. Uni yuqoridagi "Bot Token" maydoniga kiriting.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">3. Chat ID olish</h4>
+                <p className="text-sm text-muted-foreground">
+                  Botni guruhga qo'shing va @getidsbot yoki @userinfobot dan guruh ID sini oling.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="meta-pixel" className="space-y-6">
+          {/* Meta Pixel Settings */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Code className="h-5 w-5" />
+                    Meta Pixel (Facebook Pixel)
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    Meta Pixel kodini joylashtiring — saytga avtomatik qo'shiladi
+                  </CardDescription>
+                </div>
+                <Badge variant={metaPixel.enabled && metaPixel.code.trim() ? 'default' : 'secondary'}>
+                  {metaPixel.enabled && metaPixel.code.trim() ? (
+                    <><Eye className="mr-1 h-3 w-3" /> Faol</>
+                  ) : (
+                    <><EyeOff className="mr-1 h-3 w-3" /> Nofaol</>
+                  )}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="pixel-enabled">Meta Pixel ni yoqish</Label>
+                <Switch
+                  id="pixel-enabled"
+                  checked={metaPixel.enabled}
+                  onCheckedChange={(checked) => setMetaPixel(prev => ({ ...prev, enabled: checked }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pixel-code">Meta Pixel Code</Label>
+                <Textarea
+                  id="pixel-code"
+                  placeholder={"<!-- Meta Pixel Code -->\n<script>\n  !function(f,b,e,v,n,t,s)...\n</script>\n<noscript>...</noscript>\n<!-- End Meta Pixel Code -->"}
+                  value={metaPixel.code}
+                  onChange={(e) => setMetaPixel(prev => ({ ...prev, code: e.target.value }))}
+                  className="min-h-[200px] font-mono text-xs"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Meta Business Suite dan to'liq Pixel kodini (script + noscript) ko'chirib joylashtiring
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button onClick={saveMetaPixelSettings} disabled={savingPixel}>
+                  <Save className="mr-2 h-4 w-4" />
+                  {savingPixel ? 'Saqlanmoqda...' : 'Saqlash'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Meta Pixel Guide */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Meta Pixel sozlash yo'riqnomasi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-medium">1. Meta Business Suite ga kiring</h4>
+                <p className="text-sm text-muted-foreground">
+                  business.facebook.com saytiga kiring va Events Manager bo'limini oching.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">2. Pixel kodini oling</h4>
+                <p className="text-sm text-muted-foreground">
+                  "Add Events" → "From a New Website" → "Install code manually" ni tanlang va to'liq kodni ko'chiring.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">3. Kodni joylashtiring</h4>
+                <p className="text-sm text-muted-foreground">
+                  Ko'chirilgan kodni yuqoridagi textarea ga joylashtiring va "Saqlash" tugmasini bosing. Kod sayt {"<head>"} ga avtomatik qo'shiladi.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
