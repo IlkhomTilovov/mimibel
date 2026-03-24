@@ -123,4 +123,5 @@ export const navItemConfigs: NavItemConfig[] = [
   { title: 'Adminlar', url: '/admin/admins', icon: 'Shield', module: 'admins' },
   { title: 'Telegram', url: '/admin/settings', icon: 'Settings', module: 'telegram' },
   { title: 'Tizim sozlamalari', url: '/admin/system', icon: 'Settings2', module: 'systemSettings' },
+  { title: 'Ombor', url: '/admin/inventory', icon: 'Warehouse', module: 'inventory' },
 ];
