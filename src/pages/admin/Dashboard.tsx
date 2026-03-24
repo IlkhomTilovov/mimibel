@@ -702,18 +702,166 @@ export default function Dashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Moliyaviy taqsimot</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <FinRow label="Umumiy tushum" value={analytics.totalRevenue} positive />
-              <FinRow label="Xarajatlar (jami)" value={analytics.totalExpenses} />
-              <FinRow label="— Umumiy xarajatlar" value={analytics.totalGlobalExp} sub />
-              <div className="flex justify-between py-3 px-4 rounded-lg bg-muted/50 mt-2">
-                <span className="font-bold">SOF FOYDA</span>
-                <span className={cn("font-bold", analytics.netProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                  {formatPrice(analytics.netProfit)}
-                </span>
-              </div>
+          <CardContent className="space-y-1">
+            {/* Revenue */}
+            <FinRow label="Umumiy tushum" value={analytics.totalRevenue} positive />
+
+            {/* Order Expenses by type - collapsible */}
+            <Collapsible>
+              <CollapsibleTrigger className="w-full">
+                <div className="flex justify-between items-center py-2 border-b border-border/50 hover:bg-muted/30 transition-colors rounded px-1 cursor-pointer">
+                  <span className="text-sm font-medium flex items-center gap-1.5">
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform" />
+                    Buyurtma xarajatlari
+                  </span>
+                  <span className="text-sm font-semibold text-rose-600">-{formatPrice(analytics.totalOrderExp)}</span>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="pl-5 space-y-0.5 py-1">
+                  {EXPENSE_TYPE_CONFIG.map(t => {
+                    const amount = analytics.orderExpTypeMap[t.value] || 0;
+                    if (amount === 0) return null;
+                    return (
+                      <div key={t.value} className="flex justify-between items-center py-1.5 px-2 rounded hover:bg-muted/20">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <t.icon className="h-3 w-3" style={{ color: t.color }} />
+                          {t.label}
+                        </span>
+                        <span className="text-xs font-medium text-rose-500">-{formatPrice(amount)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Global expenses by type - collapsible */}
+            <Collapsible>
+              <CollapsibleTrigger className="w-full">
+                <div className="flex justify-between items-center py-2 border-b border-border/50 hover:bg-muted/30 transition-colors rounded px-1 cursor-pointer">
+                  <span className="text-sm font-medium flex items-center gap-1.5">
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    Umumiy xarajatlar
+                  </span>
+                  <span className="text-sm font-semibold text-rose-600">-{formatPrice(analytics.totalGlobalExp)}</span>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="pl-5 space-y-0.5 py-1">
+                  {Object.entries(analytics.globalExpByType).map(([type, amount]) => (
+                    <div key={type} className="flex justify-between items-center py-1.5 px-2 rounded hover:bg-muted/20">
+                      <span className="text-xs text-muted-foreground">{type}</span>
+                      <span className="text-xs font-medium text-rose-500">-{formatPrice(amount)}</span>
+                    </div>
+                  ))}
+                  {Object.keys(analytics.globalExpByType).length === 0 && (
+                    <p className="text-xs text-muted-foreground py-1 px-2">Xarajat yo'q</p>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Net Profit */}
+            <div className={cn("flex justify-between py-3 px-4 rounded-lg mt-2", analytics.netProfit >= 0 ? "bg-emerald-50 dark:bg-emerald-950/20" : "bg-rose-50 dark:bg-rose-950/20")}>
+              <span className="font-bold">SOF FOYDA</span>
+              <span className={cn("font-bold", analytics.netProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                {formatPrice(analytics.netProfit)}
+              </span>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ─── Expense by Order (Admin) ─────────────────── */}
+      {canSeeProfits && Object.keys(analytics.orderExpDetailMap).length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-muted-foreground" />
+              Xarajatlar buyurtmalar bo'yicha
+            </CardTitle>
+            <CardDescription className="text-xs">Har bir buyurtma uchun xarajat tafsiloti</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {analytics.filteredOrders
+              .filter(o => analytics.orderExpDetailMap[o.id])
+              .map(order => {
+                const detail = analytics.orderExpDetailMap[order.id];
+                const profit = (order.total_price || 0) - (order.cost_price || 0) - detail.total;
+                return (
+                  <Collapsible key={order.id}>
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 transition-transform [[data-state=open]>&]:rotate-90" />
+                          <div className="text-left min-w-0">
+                            <p className="text-sm font-medium">{order.order_number}</p>
+                            <p className="text-xs text-muted-foreground truncate">{order.customer_name}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 shrink-0">
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">Xarajat</p>
+                            <p className="text-sm font-semibold text-rose-600">{formatPrice(detail.total)}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">Foyda</p>
+                            <p className={cn("text-sm font-semibold", profit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                              {formatPrice(Math.abs(profit))}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="ml-7 mr-2 mt-1 mb-2 space-y-1">
+                        {/* Type summary */}
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {EXPENSE_TYPE_CONFIG.map(t => {
+                            const amt = detail.byType[t.value] || 0;
+                            if (amt === 0) return null;
+                            return (
+                              <Badge key={t.value} variant="outline" className="text-xs gap-1 font-normal">
+                                <t.icon className="h-3 w-3" style={{ color: t.color }} />
+                                {t.label}: {formatPrice(amt)}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                        {/* Individual entries */}
+                        <div className="space-y-0.5">
+                          {detail.items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(exp => {
+                            const typeInfo = EXPENSE_TYPE_CONFIG.find(t => t.value === exp.type);
+                            return (
+                              <div key={exp.id} className="flex items-center justify-between py-1.5 px-3 rounded text-xs bg-muted/20 hover:bg-muted/40 transition-colors">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <Badge variant="outline" className="text-[10px] h-5 shrink-0" style={{ borderColor: typeInfo?.color }}>
+                                    {typeInfo?.label || exp.type}
+                                  </Badge>
+                                  {exp.note && <span className="text-muted-foreground truncate">{exp.note}</span>}
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {format(new Date(exp.created_at), 'dd.MM HH:mm')}
+                                  </span>
+                                  <span className="font-semibold text-rose-600">{formatPrice(exp.amount)}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {/* Total */}
+                        <div className="flex justify-between pt-1.5 mt-1 border-t border-border/50 px-3">
+                          <span className="text-xs font-semibold">Jami:</span>
+                          <span className="text-xs font-bold text-rose-600">{formatPrice(detail.total)}</span>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })}
           </CardContent>
         </Card>
       )}
