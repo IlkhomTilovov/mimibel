@@ -14,6 +14,8 @@ import { ThemeLoader } from "@/components/ThemeLoader";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
+import { useMetaPixel } from "@/hooks/useMetaPixel";
+
 import { EditModeToggle } from "@/components/EditModeToggle";
 import { EditorPanel } from "@/components/editor/EditorPanel";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
@@ -46,6 +48,11 @@ import Expenses from "./pages/admin/Expenses";
 import CrmDashboard from "./pages/admin/CrmDashboard";
 import OrderExpenses from "./pages/admin/OrderExpenses";
 
+function MetaPixelInjector() {
+  useMetaPixel();
+  return null;
+}
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -63,6 +70,7 @@ const App = () => (
                     <Sonner />
                     <BrowserRouter>
                       <ScrollToTop />
+                      <MetaPixelInjector />
                       <Routes>
                         {/* Admin Auth */}
                         <Route path="/admin/auth" element={<AdminAuth />} />
