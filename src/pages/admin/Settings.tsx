@@ -201,6 +201,65 @@ export default function Settings() {
     }
   };
 
+  const validateMetaTags = (input: string): boolean => {
+    if (!input.trim()) return true;
+    const lines = input.split('\n').map(l => l.trim()).filter(Boolean);
+    for (const line of lines) {
+      if (!/^<meta\s[^>]*\/?>$/i.test(line)) {
+        setTagValidationError(`Noto'g'ri format: "${line.substring(0, 50)}...". Faqat <meta> teglar ruxsat etiladi.`);
+        return false;
+      }
+    }
+    setTagValidationError(null);
+    return true;
+  };
+
+  const saveMetaTagSettings = async () => {
+    if (!validateMetaTags(metaTags.tags)) return;
+
+    setSavingTags(true);
+    try {
+      const updates = [
+        { key: 'meta_verification_tags', value: metaTags.tags },
+        { key: 'meta_verification_enabled', value: metaTags.enabled.toString() },
+      ];
+
+      for (const update of updates) {
+        const { data: existing } = await supabase
+          .from('settings')
+          .select('id')
+          .eq('key', update.key)
+          .single();
+
+        if (existing) {
+          const { error } = await supabase
+            .from('settings')
+            .update({ value: update.value, updated_at: new Date().toISOString() })
+            .eq('key', update.key);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('settings')
+            .insert({ key: update.key, value: update.value });
+          if (error) throw error;
+        }
+      }
+
+      toast({
+        title: 'Muvaffaqiyat',
+        description: 'Meta teglar saqlandi. Sayt yangilanganida ishga tushadi.',
+      });
+    } catch (error) {
+      console.error('Error saving meta tags:', error);
+      toast({
+        title: 'Xatolik',
+        description: 'Meta teglarni saqlashda xatolik',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingTags(false);
+    }
+
   const testTelegramConnection = async () => {
     if (!telegram.bot_token || !telegram.chat_id) {
       toast({
