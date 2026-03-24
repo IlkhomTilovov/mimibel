@@ -22,6 +22,11 @@ interface MetaPixelSettings {
   enabled: boolean;
 }
 
+interface MetaTagSettings {
+  tags: string;
+  enabled: boolean;
+}
+
 export default function Settings() {
   const [telegram, setTelegram] = useState<TelegramSettings>({
     bot_token: '',
