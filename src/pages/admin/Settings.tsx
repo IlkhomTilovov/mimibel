@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Save, Send, CheckCircle, XCircle, Code, Eye, EyeOff } from 'lucide-react';
+import { Save, Send, CheckCircle, XCircle, Code, Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,11 @@ interface MetaPixelSettings {
   enabled: boolean;
 }
 
+interface MetaTagSettings {
+  tags: string;
+  enabled: boolean;
+}
+
 export default function Settings() {
   const [telegram, setTelegram] = useState<TelegramSettings>({
     bot_token: '',
@@ -32,11 +37,17 @@ export default function Settings() {
     code: '',
     enabled: false,
   });
+  const [metaTags, setMetaTags] = useState<MetaTagSettings>({
+    tags: '',
+    enabled: false,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingPixel, setSavingPixel] = useState(false);
+  const [savingTags, setSavingTags] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [tagValidationError, setTagValidationError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,6 +75,10 @@ export default function Settings() {
       setMetaPixel({
         code: settings['meta_pixel_code'] || '',
         enabled: settings['meta_pixel_enabled'] === 'true',
+      });
+      setMetaTags({
+        tags: settings['meta_verification_tags'] || '',
+        enabled: settings['meta_verification_enabled'] === 'true',
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -186,6 +201,66 @@ export default function Settings() {
     }
   };
 
+  const validateMetaTags = (input: string): boolean => {
+    if (!input.trim()) return true;
+    const lines = input.split('\n').map(l => l.trim()).filter(Boolean);
+    for (const line of lines) {
+      if (!/^<meta\s[^>]*\/?>$/i.test(line)) {
+        setTagValidationError(`Noto'g'ri format: "${line.substring(0, 50)}...". Faqat <meta> teglar ruxsat etiladi.`);
+        return false;
+      }
+    }
+    setTagValidationError(null);
+    return true;
+  };
+
+  const saveMetaTagSettings = async () => {
+    if (!validateMetaTags(metaTags.tags)) return;
+
+    setSavingTags(true);
+    try {
+      const updates = [
+        { key: 'meta_verification_tags', value: metaTags.tags },
+        { key: 'meta_verification_enabled', value: metaTags.enabled.toString() },
+      ];
+
+      for (const update of updates) {
+        const { data: existing } = await supabase
+          .from('settings')
+          .select('id')
+          .eq('key', update.key)
+          .single();
+
+        if (existing) {
+          const { error } = await supabase
+            .from('settings')
+            .update({ value: update.value, updated_at: new Date().toISOString() })
+            .eq('key', update.key);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('settings')
+            .insert({ key: update.key, value: update.value });
+          if (error) throw error;
+        }
+      }
+
+      toast({
+        title: 'Muvaffaqiyat',
+        description: 'Meta teglar saqlandi. Sayt yangilanganida ishga tushadi.',
+      });
+    } catch (error) {
+      console.error('Error saving meta tags:', error);
+      toast({
+        title: 'Xatolik',
+        description: 'Meta teglarni saqlashda xatolik',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingTags(false);
+    }
+  };
+
   const testTelegramConnection = async () => {
     if (!telegram.bot_token || !telegram.chat_id) {
       toast({
@@ -259,6 +334,7 @@ export default function Settings() {
         <TabsList>
           <TabsTrigger value="telegram">Telegram</TabsTrigger>
           <TabsTrigger value="meta-pixel">Meta Pixel</TabsTrigger>
+          <TabsTrigger value="meta-tags">Domain Verification</TabsTrigger>
         </TabsList>
 
         <TabsContent value="telegram" className="space-y-6">
@@ -443,6 +519,121 @@ export default function Settings() {
                 <h4 className="font-medium">3. Kodni joylashtiring</h4>
                 <p className="text-sm text-muted-foreground">
                   Ko'chirilgan kodni yuqoridagi textarea ga joylashtiring va "Saqlash" tugmasini bosing. Kod sayt {"<head>"} ga avtomatik qo'shiladi.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="meta-tags" className="space-y-6">
+          {/* Meta Verification Tags */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Domain Verification Meta Tags
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    Facebook, Google va boshqa xizmatlar uchun domain tasdiqlash meta teglarini joylashtiring
+                  </CardDescription>
+                </div>
+                <Badge variant={metaTags.enabled && metaTags.tags.trim() ? 'default' : 'secondary'}>
+                  {metaTags.enabled && metaTags.tags.trim() ? (
+                    <><Eye className="mr-1 h-3 w-3" /> Faol</>
+                  ) : (
+                    <><EyeOff className="mr-1 h-3 w-3" /> Nofaol</>
+                  )}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="tags-enabled">Meta teglarni yoqish</Label>
+                <Switch
+                  id="tags-enabled"
+                  checked={metaTags.enabled}
+                  onCheckedChange={(checked) => setMetaTags(prev => ({ ...prev, enabled: checked }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="verification-tags">Verification Meta Tags</Label>
+                <Textarea
+                  id="verification-tags"
+                  placeholder={'<meta name="facebook-domain-verification" content="xxxxxxx" />\n<meta name="google-site-verification" content="xxxxxxx" />'}
+                  value={metaTags.tags}
+                  onChange={(e) => {
+                    setMetaTags(prev => ({ ...prev, tags: e.target.value }));
+                    setTagValidationError(null);
+                  }}
+                  className="min-h-[150px] font-mono text-xs"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Har bir meta tegni alohida qatorga yozing. Faqat {"<meta>"} teglar qabul qilinadi.
+                </p>
+                {tagValidationError && (
+                  <div className="flex items-center gap-2 text-destructive text-xs">
+                    <AlertTriangle className="h-3 w-3" />
+                    {tagValidationError}
+                  </div>
+                )}
+              </div>
+
+              {/* Preview */}
+              {metaTags.tags.trim() && (
+                <div className="space-y-2">
+                  <Label>Joriy teglar:</Label>
+                  <div className="space-y-1">
+                    {metaTags.tags.split('\n').filter(l => l.trim()).map((line, i) => {
+                      const isValid = /^<meta\s[^>]*\/?>$/i.test(line.trim());
+                      return (
+                        <div key={i} className="flex items-center gap-2 text-xs font-mono">
+                          {isValid ? (
+                            <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500" />
+                          ) : (
+                            <XCircle className="h-3 w-3 shrink-0 text-destructive" />
+                          )}
+                          <span className="truncate text-muted-foreground">{line.trim()}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <Button onClick={saveMetaTagSettings} disabled={savingTags}>
+                  <Save className="mr-2 h-4 w-4" />
+                  {savingTags ? 'Saqlanmoqda...' : 'Saqlash'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Guide */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Domain verification yo'riqnomasi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-medium">Facebook Domain Verification</h4>
+                <p className="text-sm text-muted-foreground">
+                  Meta Business Suite → Settings → Brand safety → Domains → "Add" → meta tegni ko'chirib joylashtiring.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">Google Search Console</h4>
+                <p className="text-sm text-muted-foreground">
+                  search.google.com/search-console → Domain qo'shish → "HTML tag" usulini tanlang va meta tegni ko'chiring.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">Ko'p teglarni qo'shish</h4>
+                <p className="text-sm text-muted-foreground">
+                  Har bir meta tegni alohida qatorga yozing. Misol: birinchi qatorda Facebook, ikkinchi qatorda Google tegi.
                 </p>
               </div>
             </CardContent>
