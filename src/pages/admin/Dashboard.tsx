@@ -429,6 +429,85 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {/* ─── Deadline Alerts ──────────────────────────── */}
+      {(() => {
+        const now = new Date();
+        const oneDayLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const activeStatuses = ['new', 'in_progress'];
+        
+        const overdueOrders = orders.filter(o => 
+          o.deadline && activeStatuses.includes(o.status) && new Date(o.deadline) < now
+        );
+        const urgentOrders = orders.filter(o => 
+          o.deadline && activeStatuses.includes(o.status) && 
+          new Date(o.deadline) >= now && new Date(o.deadline) <= oneDayLater
+        );
+        
+        if (overdueOrders.length === 0 && urgentOrders.length === 0) return null;
+        
+        return (
+          <div className="space-y-2">
+            {overdueOrders.length > 0 && (
+              <Card className="border-destructive/50 bg-destructive/5">
+                <CardContent className="py-3 px-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                    <span className="font-semibold text-destructive text-sm">
+                      {overdueOrders.length} ta buyurtma muddati o'tgan!
+                    </span>
+                  </div>
+                  {overdueOrders.slice(0, 5).map(o => {
+                    const daysLate = Math.ceil((now.getTime() - new Date(o.deadline!).getTime()) / 86400000);
+                    return (
+                      <div key={o.id} className="flex items-center justify-between text-sm pl-6">
+                        <span>
+                          <span className="font-medium">{o.order_number}</span>
+                          <span className="text-muted-foreground"> — {o.customer_name}</span>
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="destructive" className="text-xs">{daysLate} kun kechikdi</Badge>
+                          <Button size="sm" variant="outline" className="h-6 text-xs" asChild>
+                            <Link to="/admin/orders">Ko'rish</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
+            {urgentOrders.length > 0 && (
+              <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
+                <CardContent className="py-3 px-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span className="font-semibold text-amber-700 dark:text-amber-400 text-sm">
+                      {urgentOrders.length} ta buyurtma 1 kun ichida tayyor bo'lishi kerak!
+                    </span>
+                  </div>
+                  {urgentOrders.slice(0, 5).map(o => {
+                    const hoursLeft = Math.max(0, Math.ceil((new Date(o.deadline!).getTime() - now.getTime()) / 3600000));
+                    return (
+                      <div key={o.id} className="flex items-center justify-between text-sm pl-6">
+                        <span>
+                          <span className="font-medium">{o.order_number}</span>
+                          <span className="text-muted-foreground"> — {o.customer_name}</span>
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs border-amber-300 text-amber-700">{hoursLeft} soat qoldi</Badge>
+                          <Button size="sm" variant="outline" className="h-6 text-xs" asChild>
+                            <Link to="/admin/orders">Ko'rish</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+      })()}
       {/* ─── KPI Cards ────────────────────────────────── */}
       <div className={cn("grid gap-4", canSeeProfits ? "grid-cols-2 lg:grid-cols-5" : "grid-cols-2 lg:grid-cols-3")}>
         <KPICard
