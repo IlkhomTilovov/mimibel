@@ -14,6 +14,8 @@ import { ThemeLoader } from "@/components/ThemeLoader";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
+import { useMetaPixel } from "@/hooks/useMetaPixel";
+
 import { EditModeToggle } from "@/components/EditModeToggle";
 import { EditorPanel } from "@/components/editor/EditorPanel";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
