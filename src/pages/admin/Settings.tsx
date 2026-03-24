@@ -523,6 +523,121 @@ export default function Settings() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="meta-tags" className="space-y-6">
+          {/* Meta Verification Tags */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Domain Verification Meta Tags
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    Facebook, Google va boshqa xizmatlar uchun domain tasdiqlash meta teglarini joylashtiring
+                  </CardDescription>
+                </div>
+                <Badge variant={metaTags.enabled && metaTags.tags.trim() ? 'default' : 'secondary'}>
+                  {metaTags.enabled && metaTags.tags.trim() ? (
+                    <><Eye className="mr-1 h-3 w-3" /> Faol</>
+                  ) : (
+                    <><EyeOff className="mr-1 h-3 w-3" /> Nofaol</>
+                  )}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="tags-enabled">Meta teglarni yoqish</Label>
+                <Switch
+                  id="tags-enabled"
+                  checked={metaTags.enabled}
+                  onCheckedChange={(checked) => setMetaTags(prev => ({ ...prev, enabled: checked }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="verification-tags">Verification Meta Tags</Label>
+                <Textarea
+                  id="verification-tags"
+                  placeholder={'<meta name="facebook-domain-verification" content="xxxxxxx" />\n<meta name="google-site-verification" content="xxxxxxx" />'}
+                  value={metaTags.tags}
+                  onChange={(e) => {
+                    setMetaTags(prev => ({ ...prev, tags: e.target.value }));
+                    setTagValidationError(null);
+                  }}
+                  className="min-h-[150px] font-mono text-xs"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Har bir meta tegni alohida qatorga yozing. Faqat {"<meta>"} teglar qabul qilinadi.
+                </p>
+                {tagValidationError && (
+                  <div className="flex items-center gap-2 text-destructive text-xs">
+                    <AlertTriangle className="h-3 w-3" />
+                    {tagValidationError}
+                  </div>
+                )}
+              </div>
+
+              {/* Preview */}
+              {metaTags.tags.trim() && (
+                <div className="space-y-2">
+                  <Label>Joriy teglar:</Label>
+                  <div className="space-y-1">
+                    {metaTags.tags.split('\n').filter(l => l.trim()).map((line, i) => {
+                      const isValid = /^<meta\s[^>]*\/?>$/i.test(line.trim());
+                      return (
+                        <div key={i} className="flex items-center gap-2 text-xs font-mono">
+                          {isValid ? (
+                            <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500" />
+                          ) : (
+                            <XCircle className="h-3 w-3 shrink-0 text-destructive" />
+                          )}
+                          <span className="truncate text-muted-foreground">{line.trim()}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <Button onClick={saveMetaTagSettings} disabled={savingTags}>
+                  <Save className="mr-2 h-4 w-4" />
+                  {savingTags ? 'Saqlanmoqda...' : 'Saqlash'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Guide */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Domain verification yo'riqnomasi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-medium">Facebook Domain Verification</h4>
+                <p className="text-sm text-muted-foreground">
+                  Meta Business Suite → Settings → Brand safety → Domains → "Add" → meta tegni ko'chirib joylashtiring.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">Google Search Console</h4>
+                <p className="text-sm text-muted-foreground">
+                  search.google.com/search-console → Domain qo'shish → "HTML tag" usulini tanlang va meta tegni ko'chiring.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">Ko'p teglarni qo'shish</h4>
+                <p className="text-sm text-muted-foreground">
+                  Har bir meta tegni alohida qatorga yozing. Misol: birinchi qatorda Facebook, ikkinchi qatorda Google tegi.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
