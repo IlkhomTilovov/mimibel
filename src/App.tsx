@@ -70,6 +70,7 @@ const App = () => (
                     <Sonner />
                     <BrowserRouter>
                       <ScrollToTop />
+                      <MetaPixelInjector />
                       <Routes>
                         {/* Admin Auth */}
                         <Route path="/admin/auth" element={<AdminAuth />} />
