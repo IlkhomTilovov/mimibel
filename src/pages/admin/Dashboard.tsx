@@ -210,7 +210,8 @@ export default function Dashboard() {
 
   // ─── Analytics Computation ──────────────────────────────
   const analytics = useMemo(() => {
-    const { start, end } = getDateRange(dateFilter);
+    const start = startOfDay(selectedDate);
+    const end = endOfDay(selectedDate);
 
     let filteredOrders = orders.filter(o => {
       const d = new Date(o.created_at);
