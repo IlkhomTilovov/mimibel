@@ -16,6 +16,7 @@ import {
   FileText,
   ClipboardList,
   Settings2,
+  Warehouse,
   LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
