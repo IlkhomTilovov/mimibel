@@ -222,23 +222,50 @@ export default function Orders() {
 
   const fetchOrderDetails = async (orderId: string) => {
     try {
-      const { data: orderItems, error } = await supabase
-        .from('order_items')
-        .select('*')
-        .eq('order_id', orderId);
+      const [itemsRes, expRes] = await Promise.all([
+        supabase.from('order_items').select('*').eq('order_id', orderId),
+        supabase.from('order_expenses').select('*').eq('order_id', orderId).order('created_at', { ascending: false }),
+      ]);
 
-      if (error) throw error;
+      if (itemsRes.error) throw itemsRes.error;
 
       const order = orders.find(o => o.id === orderId);
       if (order) {
         setSelectedOrder({
           ...order,
-          order_items: orderItems as OrderItem[],
+          order_items: itemsRes.data as OrderItem[],
         });
+        setOrderExpenses((expRes.data as OrderExpense[]) || []);
       }
     } catch (error) {
       console.error('Error fetching order details:', error);
     }
+  };
+
+  const addOrderExpense = async () => {
+    if (!selectedOrder || !expAmount || Number(expAmount) <= 0) return;
+    setAddingExpense(true);
+    try {
+      const { error } = await supabase.from('order_expenses').insert({
+        order_id: selectedOrder.id,
+        amount: Number(expAmount),
+        type: expType,
+        note: expNote || null,
+        created_by: user?.id || null,
+      });
+      if (error) throw error;
+      toast({ title: 'Muvaffaqiyat', description: 'Xarajat qo\'shildi' });
+      setExpAmount('');
+      setExpNote('');
+      // Refresh expenses
+      const { data } = await supabase.from('order_expenses').select('*').eq('order_id', selectedOrder.id).order('created_at', { ascending: false });
+      setOrderExpenses((data as OrderExpense[]) || []);
+    } catch (error: any) {
+      toast({ title: 'Xatolik', description: error.message, variant: 'destructive' });
+    } finally {
+      setAddingExpense(false);
+    }
+  };
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
