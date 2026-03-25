@@ -480,7 +480,7 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
 
   // Check if deadline is overdue
   const isOverdue = (order: Order) => {
-    if (!order.deadline || order.status === 'completed' || order.status === 'cancelled') return false;
+    if (!order.deadline || order.status === 'sotildi' || order.status === 'sotilmadi') return false;
     return new Date(order.deadline) < new Date();
   };
 
