@@ -613,14 +613,16 @@ export default function Dashboard() {
           iconColor="text-blue-600"
           subtitle={`Bugun: +${analytics.todayNew}`}
         />
-        <KPICard
-          title="Tushum"
-          value={formatPrice(analytics.totalRevenue)}
-          icon={TrendingUp}
-          iconBg="bg-emerald-100"
-          iconColor="text-emerald-600"
-          valueColor="text-emerald-600"
-        />
+        {canSeeProfits && (
+          <KPICard
+            title="Tushum"
+            value={formatPrice(analytics.totalRevenue)}
+            icon={TrendingUp}
+            iconBg="bg-emerald-100"
+            iconColor="text-emerald-600"
+            valueColor="text-emerald-600"
+          />
+        )}
         {canSeeProfits && (
           <>
             <KPICard
