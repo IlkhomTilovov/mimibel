@@ -112,14 +112,6 @@ const STATUS_CONFIG = {
     label: 'Jarayonda', 
     className: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300' 
   },
-  completed: { 
-    label: 'Bajarildi', 
-    className: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300' 
-  },
-  cancelled: { 
-    label: 'Bekor qilindi', 
-    className: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300' 
-  },
   sotildi: {
     label: 'Sotildi',
     className: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300'
