@@ -75,9 +75,11 @@ export function VideoPlayerModal({ isOpen, onClose, videoUrl, platform }: VideoP
       {/* Video container */}
       <div
         className={cn(
-          "relative w-full max-w-5xl aspect-video mx-4",
-          "transition-transform duration-200",
-          isAnimating ? "scale-100" : "scale-95"
+          "relative mx-4 transition-transform duration-200",
+          isAnimating ? "scale-100" : "scale-95",
+          platform === 'instagram'
+            ? "w-full max-w-md h-[80vh] max-h-[800px]"
+            : "w-full max-w-5xl aspect-video"
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -94,9 +96,11 @@ export function VideoPlayerModal({ isOpen, onClose, videoUrl, platform }: VideoP
         {/* Video iframe */}
         <iframe
           src={getEmbedUrl()}
-          className="w-full h-full rounded-xl"
+          className="w-full h-full rounded-xl border-0"
+          style={{ overflow: 'hidden' }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
+          scrolling="no"
           onLoad={() => setIsLoading(false)}
         />
       </div>
