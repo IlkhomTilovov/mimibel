@@ -5,8 +5,10 @@ import {
   AlertTriangle, Bell, RefreshCw, ArrowRight, Plus, Users,
   Warehouse, Receipt, BarChart3, Loader2, Calendar as CalendarIcon,
   ArrowUpRight, ArrowDownRight, ChevronDown, ChevronRight,
-  Layers, Truck, Hammer, Clock
+  Layers, Truck, Hammer, Clock, Phone, Send, Eye, X
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -152,6 +154,7 @@ export default function Dashboard() {
   const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
   const [fromPopoverOpen, setFromPopoverOpen] = useState(false);
   const [toPopoverOpen, setToPopoverOpen] = useState(false);
+  const [statusModalKey, setStatusModalKey] = useState<string | null>(null);
 
   const { isAdmin, isManager, user } = useAuth();
   const navigate = useNavigate();
@@ -651,40 +654,156 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* ─── Status Count Cards ───────────────────────── */}
+      {/* ─── Status Count Cards (Clickable with Preview) ─── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {[
-          { key: 'new', label: 'Yangi', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', valueColor: 'text-blue-600' },
-          { key: 'in_progress', label: 'Jarayonda', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
-          { key: 'sotildi', label: 'Sotildi', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', valueColor: 'text-emerald-600' },
-          { key: 'sotilmadi', label: 'Sotilmadi', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', valueColor: 'text-rose-600' },
-          { key: 'keyinroq_sotildi', label: 'Keyinroq sotildi', iconBg: 'bg-violet-100', iconColor: 'text-violet-600', valueColor: 'text-violet-600' },
-        ].map(({ key, label, iconBg, iconColor, valueColor }) => {
-          const count = analytics.filteredOrders.filter(o => o.status === key).length;
-          const amount = analytics.filteredOrders
-            .filter(o => o.status === key)
-            .reduce((s, o) => s + (o.total_price || 0), 0);
-          const isActive = statusFilter === key;
+          { key: 'new', label: 'YANGI', borderColor: 'border-t-blue-500', valueColor: 'text-blue-600' },
+          { key: 'in_progress', label: 'JARAYONDA', borderColor: 'border-t-amber-500', valueColor: 'text-amber-600' },
+          { key: 'sotildi', label: 'SOTILDI', borderColor: 'border-t-emerald-500', valueColor: 'text-emerald-600' },
+          { key: 'sotilmadi', label: 'SOTILMADI', borderColor: 'border-t-rose-500', valueColor: 'text-rose-600' },
+          { key: 'keyinroq_sotildi', label: 'KEYINROQ SOTILDI', borderColor: 'border-t-violet-500', valueColor: 'text-violet-600' },
+        ].map(({ key, label, borderColor, valueColor }) => {
+          const statusOrders = analytics.filteredOrders.filter(o => o.status === key);
+          const count = statusOrders.length;
+          const amount = statusOrders.reduce((s, o) => s + (o.total_price || 0), 0);
+          const previewOrders = statusOrders.slice(0, 2);
+
           return (
             <Card
               key={key}
               className={cn(
-                "cursor-pointer hover:shadow-md transition-all",
-                isActive && "ring-2 ring-primary shadow-md"
+                "cursor-pointer hover:shadow-lg transition-all border-t-4",
+                borderColor
               )}
-              onClick={() => setStatusFilter(isActive ? 'all' : key)}
+              onClick={() => setStatusModalKey(key)}
             >
               <CardContent className="p-3">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide truncate">{label}</p>
-                <p className={cn("text-xl font-bold mt-0.5", valueColor)}>{count}</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
+                <p className={cn("text-2xl font-bold mt-0.5", valueColor)}>{count}</p>
                 {amount > 0 && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">{formatPrice(amount)}</p>
+                )}
+                {/* Preview of top 2 orders */}
+                {previewOrders.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
+                    {previewOrders.map(o => {
+                      const items = orderItems.filter(i => i.order_id === o.id);
+                      return (
+                        <div key={o.id} className="text-[10px] text-muted-foreground truncate">
+                          <span className="font-medium text-foreground">{o.order_number}</span>
+                          {items.length > 0 && (
+                            <span> — {items[0].product_name_snapshot} x{items[0].quantity}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {count > 2 && (
+                      <p className="text-[10px] text-muted-foreground/60">+{count - 2} ta yana...</p>
+                    )}
+                  </div>
                 )}
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      {/* ─── Status Orders Modal ──────────────────────── */}
+      <Dialog open={!!statusModalKey} onOpenChange={(open) => !open && setStatusModalKey(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] p-0">
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle className="flex items-center gap-2">
+              {statusModalKey && getStatusBadge(statusModalKey)}
+              <span>buyurtmalar</span>
+              <Badge variant="secondary" className="ml-1">
+                {analytics.filteredOrders.filter(o => o.status === statusModalKey).length}
+              </Badge>
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh] px-4 pb-4">
+            {(() => {
+              const modalOrders = analytics.filteredOrders.filter(o => o.status === statusModalKey);
+              if (modalOrders.length === 0) {
+                return (
+                  <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                    <ShoppingCart className="h-10 w-10 mb-3 opacity-20" />
+                    <p className="text-sm font-medium">Bu statusda buyurtmalar yo'q</p>
+                  </div>
+                );
+              }
+              return (
+                <div className="space-y-2">
+                  {modalOrders.map(order => {
+                    const items = orderItems.filter(i => i.order_id === order.id);
+                    return (
+                      <div
+                        key={order.id}
+                        className="p-3 rounded-lg border bg-card hover:bg-muted/40 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-bold">{order.order_number}</span>
+                              {getStatusBadge(order.status)}
+                            </div>
+                            {/* Products */}
+                            {items.length > 0 && (
+                              <div className="mt-1.5 space-y-0.5">
+                                {items.map((item, idx) => (
+                                  <p key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <Package className="h-3 w-3 shrink-0" />
+                                    <span className="font-medium text-foreground">{item.product_name_snapshot}</span>
+                                    <span>x{item.quantity}</span>
+                                    {item.price_snapshot && <span className="ml-1">({formatPrice(item.price_snapshot)})</span>}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                            {/* Customer */}
+                            <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                              <span>Mijoz: <span className="font-medium text-foreground">{order.customer_name}</span></span>
+                              <span>{order.customer_phone}</span>
+                            </div>
+                            {/* Deadline */}
+                            {order.deadline && (
+                              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                Muddat: {format(new Date(order.deadline), 'dd.MM.yyyy HH:mm')}
+                              </p>
+                            )}
+                            {/* Price */}
+                            {order.total_price && (
+                              <p className="text-xs font-semibold mt-1">{formatPrice(order.total_price)}</p>
+                            )}
+                          </div>
+                          {/* Actions */}
+                          <div className="flex flex-col gap-1 shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs gap-1"
+                              onClick={(e) => { e.stopPropagation(); setStatusModalKey(null); setDetailOrderId(order.id); }}
+                            >
+                              <Eye className="h-3 w-3" />
+                              Ko'rish
+                            </Button>
+                            <a href={`tel:${order.customer_phone}`} onClick={e => e.stopPropagation()}>
+                              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 w-full">
+                                <Phone className="h-3 w-3" />
+                                Qo'ng'iroq
+                              </Button>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* ─── Charts ───────────────────────────────────── */}
       {canSeeProfits && (
