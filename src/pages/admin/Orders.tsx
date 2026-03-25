@@ -133,6 +133,7 @@ export default function Orders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [quickDateFilter, setQuickDateFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [telegramSettings, setTelegramSettings] = useState<TelegramSettings | null>(null);
@@ -452,11 +453,54 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
     return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
   };
 
+  const handleQuickDateFilter = (filter: string) => {
+    setQuickDateFilter(filter);
+    const now = new Date();
+    switch (filter) {
+      case 'today':
+        setDateFrom(now.toISOString().split('T')[0]);
+        setDateTo(now.toISOString().split('T')[0]);
+        break;
+      case 'yesterday': {
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        setDateFrom(yesterday.toISOString().split('T')[0]);
+        setDateTo(yesterday.toISOString().split('T')[0]);
+        break;
+      }
+      case '7days': {
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 6);
+        setDateFrom(weekAgo.toISOString().split('T')[0]);
+        setDateTo(now.toISOString().split('T')[0]);
+        break;
+      }
+      case '30days': {
+        const monthAgo = new Date(now);
+        monthAgo.setDate(monthAgo.getDate() - 29);
+        setDateFrom(monthAgo.toISOString().split('T')[0]);
+        setDateTo(now.toISOString().split('T')[0]);
+        break;
+      }
+      case 'this_month': {
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        setDateFrom(firstDay.toISOString().split('T')[0]);
+        setDateTo(now.toISOString().split('T')[0]);
+        break;
+      }
+      default:
+        setDateFrom('');
+        setDateTo('');
+        break;
+    }
+  };
+
   const clearFilters = () => {
     setStatusFilter('all');
     setSearchQuery('');
     setDateFrom('');
     setDateTo('');
+    setQuickDateFilter('all');
   };
 
   const hasActiveFilters = statusFilter !== 'all' || searchQuery || dateFrom || dateTo;
@@ -559,7 +603,29 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-3">
+          {/* Quick date filters */}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { value: 'all', label: 'Barchasi' },
+              { value: 'today', label: 'Bugun' },
+              { value: 'yesterday', label: 'Kecha' },
+              { value: '7days', label: '7 kun' },
+              { value: '30days', label: '30 kun' },
+              { value: 'this_month', label: 'Bu oy' },
+            ].map(f => (
+              <Button
+                key={f.value}
+                variant={quickDateFilter === f.value ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => handleQuickDateFilter(f.value)}
+              >
+                {f.label}
+              </Button>
+            ))}
+          </div>
+
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="relative flex-1">
@@ -596,15 +662,15 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
               <Input
                 type="date"
                 value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
+                onChange={(e) => { setDateFrom(e.target.value); setQuickDateFilter('custom'); }}
                 className="w-[140px]"
                 placeholder="Dan"
               />
-              <span className="text-muted-foreground">-</span>
+              <span className="text-muted-foreground text-sm">→</span>
               <Input
                 type="date"
                 value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
+                onChange={(e) => { setDateTo(e.target.value); setQuickDateFilter('custom'); }}
                 className="w-[140px]"
                 placeholder="Gacha"
               />
@@ -618,6 +684,14 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
               </Button>
             )}
           </div>
+
+          {/* Active date range label */}
+          {(dateFrom || dateTo) && (
+            <p className="text-xs text-muted-foreground">
+              Tanlangan oraliq: {dateFrom || '...'} → {dateTo || '...'}
+              {' '}({filteredOrders.length} ta buyurtma)
+            </p>
+          )}
         </CardContent>
       </Card>
 
