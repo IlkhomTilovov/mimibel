@@ -533,8 +533,6 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
         {[
           { key: 'new', label: 'Yangi', icon: Package, color: 'blue' },
           { key: 'in_progress', label: 'Jarayonda', icon: Clock, color: 'amber' },
-          { key: 'completed', label: 'Bajarildi', icon: ShoppingBag, color: 'green' },
-          { key: 'cancelled', label: 'Bekor qilindi', icon: X, color: 'red' },
           { key: 'sotildi', label: 'Sotildi', icon: ShoppingBag, color: 'emerald' },
           { key: 'sotilmadi', label: 'Sotilmadi', icon: X, color: 'rose' },
           { key: 'keyinroq_sotildi', label: 'Keyinroq sotildi', icon: Clock, color: 'violet' },
