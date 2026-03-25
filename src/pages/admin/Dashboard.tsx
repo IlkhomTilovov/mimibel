@@ -562,6 +562,43 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* ─── Status Count Cards ───────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        {[
+          { key: 'new', label: 'Yangi', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', valueColor: 'text-blue-600' },
+          { key: 'in_progress', label: 'Jarayonda', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
+          { key: 'completed', label: 'Bajarildi', iconBg: 'bg-green-100', iconColor: 'text-green-600', valueColor: 'text-green-600' },
+          { key: 'cancelled', label: 'Bekor qilindi', iconBg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
+          { key: 'sotildi', label: 'Sotildi', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', valueColor: 'text-emerald-600' },
+          { key: 'sotilmadi', label: 'Sotilmadi', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', valueColor: 'text-rose-600' },
+          { key: 'keyinroq_sotildi', label: 'Keyinroq sotildi', iconBg: 'bg-violet-100', iconColor: 'text-violet-600', valueColor: 'text-violet-600' },
+        ].map(({ key, label, iconBg, iconColor, valueColor }) => {
+          const count = analytics.filteredOrders.filter(o => o.status === key).length;
+          const amount = analytics.filteredOrders
+            .filter(o => o.status === key)
+            .reduce((s, o) => s + (o.total_price || 0), 0);
+          const isActive = statusFilter === key;
+          return (
+            <Card
+              key={key}
+              className={cn(
+                "cursor-pointer hover:shadow-md transition-all",
+                isActive && "ring-2 ring-primary shadow-md"
+              )}
+              onClick={() => setStatusFilter(isActive ? 'all' : key)}
+            >
+              <CardContent className="p-3">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide truncate">{label}</p>
+                <p className={cn("text-xl font-bold mt-0.5", valueColor)}>{count}</p>
+                {amount > 0 && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{formatPrice(amount)}</p>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
       {/* ─── Charts ───────────────────────────────────── */}
       {canSeeProfits && (
         <AnalyticsChart
@@ -729,7 +766,7 @@ export default function Dashboard() {
                         {order.total_price && (
                           <p className="text-xs font-medium">{formatPrice(order.total_price)}</p>
                         )}
-                        {canSeeProfits && ['completed', 'sotildi'].includes(order.status) && (
+                        {canSeeProfits && ['completed', 'sotildi', 'keyinroq_sotildi'].includes(order.status) && (
                           <p className={cn("text-xs font-medium flex items-center justify-end gap-0.5", profit >= 0 ? "text-emerald-600" : "text-rose-600")}>
                             {profit >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                             {formatPrice(Math.abs(profit))}

@@ -59,6 +59,17 @@ export default function CrmDashboard() {
     fetchAll();
   }, []);
 
+  // Realtime subscriptions
+  useEffect(() => {
+    const channel = supabase
+      .channel('crm-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_expenses' }, () => fetchAll())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const fetchAll = async () => {
     setLoading(true);
     try {
