@@ -38,8 +38,6 @@ interface ExpenseRow {
 const STATUS_LABELS: Record<string, string> = {
   new: 'Yangi',
   in_progress: 'Jarayonda',
-  completed: 'Bajarildi',
-  cancelled: 'Bekor qilindi',
   sotildi: 'Sotildi',
   sotilmadi: 'Sotilmadi',
   keyinroq_sotildi: 'Keyinroq sotildi',
