@@ -141,7 +141,7 @@ export default function CrmDashboard() {
         const d = new Date(o.created_at);
         return d >= mStart && d <= mEnd;
       });
-      const mRev = mOrders.filter(o => ['completed', 'sotildi', 'keyinroq_sotildi'].includes(o.status))
+      const mRev = mOrders.filter(o => ['sotildi', 'keyinroq_sotildi'].includes(o.status))
         .reduce((s, o) => s + (o.total_price || 0), 0);
       const mCost = mOrders.reduce((s, o) => s + (o.cost_price || 0), 0);
       const mOrdExp = mOrders.reduce((s, o) => s + (orderExpMap[o.id] || 0), 0);

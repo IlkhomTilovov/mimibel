@@ -565,8 +565,6 @@ export default function Dashboard() {
         {[
           { key: 'new', label: 'Yangi', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', valueColor: 'text-blue-600' },
           { key: 'in_progress', label: 'Jarayonda', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
-          { key: 'completed', label: 'Bajarildi', iconBg: 'bg-green-100', iconColor: 'text-green-600', valueColor: 'text-green-600' },
-          { key: 'cancelled', label: 'Bekor qilindi', iconBg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
           { key: 'sotildi', label: 'Sotildi', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', valueColor: 'text-emerald-600' },
           { key: 'sotilmadi', label: 'Sotilmadi', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', valueColor: 'text-rose-600' },
           { key: 'keyinroq_sotildi', label: 'Keyinroq sotildi', iconBg: 'bg-violet-100', iconColor: 'text-violet-600', valueColor: 'text-violet-600' },
