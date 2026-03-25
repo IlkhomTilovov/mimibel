@@ -38,7 +38,7 @@ export const rolePermissions: Record<AppRole, RolePermissions> = {
     admins: { view: false, create: false, edit: false, delete: false },
     telegram: { view: false, create: false, edit: false, delete: false },
     systemSettings: { view: false, create: false, edit: false, delete: false },
-    inventory: { view: true, create: false, edit: false, delete: false },
+    inventory: { view: false, create: false, edit: false, delete: false },
     expenses: { view: false, create: false, edit: false, delete: false },
   },
   
