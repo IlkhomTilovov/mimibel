@@ -453,11 +453,54 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
     return new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m';
   };
 
+  const handleQuickDateFilter = (filter: string) => {
+    setQuickDateFilter(filter);
+    const now = new Date();
+    switch (filter) {
+      case 'today':
+        setDateFrom(now.toISOString().split('T')[0]);
+        setDateTo(now.toISOString().split('T')[0]);
+        break;
+      case 'yesterday': {
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        setDateFrom(yesterday.toISOString().split('T')[0]);
+        setDateTo(yesterday.toISOString().split('T')[0]);
+        break;
+      }
+      case '7days': {
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 6);
+        setDateFrom(weekAgo.toISOString().split('T')[0]);
+        setDateTo(now.toISOString().split('T')[0]);
+        break;
+      }
+      case '30days': {
+        const monthAgo = new Date(now);
+        monthAgo.setDate(monthAgo.getDate() - 29);
+        setDateFrom(monthAgo.toISOString().split('T')[0]);
+        setDateTo(now.toISOString().split('T')[0]);
+        break;
+      }
+      case 'this_month': {
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        setDateFrom(firstDay.toISOString().split('T')[0]);
+        setDateTo(now.toISOString().split('T')[0]);
+        break;
+      }
+      default:
+        setDateFrom('');
+        setDateTo('');
+        break;
+    }
+  };
+
   const clearFilters = () => {
     setStatusFilter('all');
     setSearchQuery('');
     setDateFrom('');
     setDateTo('');
+    setQuickDateFilter('all');
   };
 
   const hasActiveFilters = statusFilter !== 'all' || searchQuery || dateFrom || dateTo;
