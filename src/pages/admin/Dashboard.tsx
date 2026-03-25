@@ -708,100 +708,192 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* ─── Status Orders Modal ──────────────────────── */}
+      {/* ─── Status Orders Modal (Professional) ─────── */}
       <Dialog open={!!statusModalKey} onOpenChange={(open) => !open && setStatusModalKey(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] p-0">
-          <DialogHeader className="p-4 pb-2">
-            <DialogTitle className="flex items-center gap-2">
-              {statusModalKey && getStatusBadge(statusModalKey)}
-              <span>buyurtmalar</span>
-              <Badge variant="secondary" className="ml-1">
-                {analytics.filteredOrders.filter(o => o.status === statusModalKey).length}
-              </Badge>
-            </DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[70vh] px-4 pb-4">
-            {(() => {
-              const modalOrders = analytics.filteredOrders.filter(o => o.status === statusModalKey);
-              if (modalOrders.length === 0) {
-                return (
-                  <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                    <ShoppingCart className="h-10 w-10 mb-3 opacity-20" />
-                    <p className="text-sm font-medium">Bu statusda buyurtmalar yo'q</p>
-                  </div>
-                );
-              }
-              return (
-                <div className="space-y-2">
-                  {modalOrders.map(order => {
-                    const items = orderItems.filter(i => i.order_id === order.id);
-                    return (
-                      <div
-                        key={order.id}
-                        className="p-3 rounded-lg border bg-card hover:bg-muted/40 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-bold">{order.order_number}</span>
-                              {getStatusBadge(order.status)}
-                            </div>
-                            {/* Products */}
-                            {items.length > 0 && (
-                              <div className="mt-1.5 space-y-0.5">
-                                {items.map((item, idx) => (
-                                  <p key={idx} className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Package className="h-3 w-3 shrink-0" />
-                                    <span className="font-medium text-foreground">{item.product_name_snapshot}</span>
-                                    <span>x{item.quantity}</span>
-                                    {item.price_snapshot && <span className="ml-1">({formatPrice(item.price_snapshot)})</span>}
-                                  </p>
-                                ))}
-                              </div>
-                            )}
-                            {/* Customer */}
-                            <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
-                              <span>Mijoz: <span className="font-medium text-foreground">{order.customer_name}</span></span>
-                              <span>{order.customer_phone}</span>
-                            </div>
-                            {/* Deadline */}
-                            {order.deadline && (
-                              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                Muddat: {format(new Date(order.deadline), 'dd.MM.yyyy HH:mm')}
-                              </p>
-                            )}
-                            {/* Price */}
-                            {order.total_price && (
-                              <p className="text-xs font-semibold mt-1">{formatPrice(order.total_price)}</p>
-                            )}
-                          </div>
-                          {/* Actions */}
-                          <div className="flex flex-col gap-1 shrink-0">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs gap-1"
-                              onClick={(e) => { e.stopPropagation(); setStatusModalKey(null); setDetailOrderId(order.id); }}
-                            >
-                              <Eye className="h-3 w-3" />
-                              Ko'rish
-                            </Button>
-                            <a href={`tel:${order.customer_phone}`} onClick={e => e.stopPropagation()}>
-                              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 w-full">
-                                <Phone className="h-3 w-3" />
-                                Qo'ng'iroq
-                              </Button>
-                            </a>
-                          </div>
-                        </div>
+        <DialogContent className="max-w-3xl max-h-[90vh] p-0 gap-0 overflow-hidden">
+          {/* Modal Header */}
+          {statusModalKey && (() => {
+            const cfg = STATUS_CONFIG[statusModalKey];
+            const modalOrders = analytics.filteredOrders.filter(o => o.status === statusModalKey);
+            const totalAmount = modalOrders.reduce((s, o) => s + (o.total_price || 0), 0);
+            return (
+              <>
+                <div className={cn("px-5 py-4 border-b", {
+                  'bg-blue-50/80 dark:bg-blue-950/30': statusModalKey === 'new',
+                  'bg-amber-50/80 dark:bg-amber-950/30': statusModalKey === 'in_progress',
+                  'bg-emerald-50/80 dark:bg-emerald-950/30': statusModalKey === 'sotildi',
+                  'bg-rose-50/80 dark:bg-rose-950/30': statusModalKey === 'sotilmadi',
+                  'bg-violet-50/80 dark:bg-violet-950/30': statusModalKey === 'keyinroq_sotildi',
+                })}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {getStatusBadge(statusModalKey)}
+                      <div>
+                        <h3 className="font-bold text-base">{cfg?.label} buyurtmalar</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {modalOrders.length} ta buyurtma · {formatPrice(totalAmount)}
+                        </p>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
                 </div>
-              );
-            })()}
-          </ScrollArea>
+
+                <ScrollArea className="max-h-[75vh]">
+                  {modalOrders.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                      <ShoppingCart className="h-12 w-12 mb-3 opacity-15" />
+                      <p className="font-medium">Bu statusda buyurtmalar yo'q</p>
+                      <p className="text-xs mt-1">Boshqa sana oralig'ini tanlang</p>
+                    </div>
+                  ) : (
+                    <div className="p-4 space-y-3">
+                      {modalOrders.map(order => {
+                        const items = orderItems.filter(i => i.order_id === order.id);
+                        const orderExp = analytics.orderExpMap[order.id] || 0;
+                        const profit = (order.total_price || 0) - (order.cost_price || 0) - orderExp;
+                        const now = new Date();
+                        const deadline = order.deadline ? new Date(order.deadline) : null;
+                        const isOverdue = deadline && deadline < now && ['new', 'in_progress'].includes(order.status);
+                        const hoursLeft = deadline ? Math.ceil((deadline.getTime() - now.getTime()) / 3600000) : null;
+
+                        // Expense breakdown for this order
+                        const expDetail = analytics.orderExpDetailMap[order.id];
+
+                        return (
+                          <Card key={order.id} className={cn("overflow-hidden transition-shadow hover:shadow-md", isOverdue && "border-destructive/50")}>
+                            {/* Order Header */}
+                            <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                                <span className="font-bold text-sm">{order.order_number}</span>
+                                {getStatusBadge(order.status)}
+                                <span className="text-[10px] text-muted-foreground">{format(new Date(order.created_at), 'dd.MM.yyyy HH:mm')}</span>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button size="sm" variant="default" className="h-7 text-xs gap-1" onClick={() => { setStatusModalKey(null); setDetailOrderId(order.id); }}>
+                                  <Eye className="h-3 w-3" /> Ko'rish
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="p-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {/* Customer Card */}
+                                <div className="rounded-lg bg-muted/40 p-3 space-y-2">
+                                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                                    <Users className="h-3 w-3" /> Mijoz
+                                  </p>
+                                  <p className="text-sm font-semibold">{order.customer_name}</p>
+                                  <p className="text-xs text-muted-foreground">{order.customer_phone}</p>
+                                  <div className="flex gap-1.5 pt-1">
+                                    <a href={`tel:${order.customer_phone}`} onClick={e => e.stopPropagation()}>
+                                      <Button size="sm" variant="outline" className="h-6 text-[10px] gap-1 px-2">
+                                        <Phone className="h-2.5 w-2.5" /> Qo'ng'iroq
+                                      </Button>
+                                    </a>
+                                    <a href={`https://t.me/${order.customer_phone.replace('+', '')}`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
+                                      <Button size="sm" variant="outline" className="h-6 text-[10px] gap-1 px-2">
+                                        <Send className="h-2.5 w-2.5" /> Telegram
+                                      </Button>
+                                    </a>
+                                  </div>
+                                </div>
+
+                                {/* Products Card */}
+                                <div className="rounded-lg bg-muted/40 p-3 space-y-2">
+                                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                                    <Package className="h-3 w-3" /> Mahsulotlar
+                                  </p>
+                                  {items.length > 0 ? items.map((item, idx) => (
+                                    <div key={idx} className="text-xs">
+                                      <p className="font-medium">{item.product_name_snapshot}</p>
+                                      <p className="text-muted-foreground">
+                                        x{item.quantity}
+                                        {item.price_snapshot ? ` · ${formatPrice(item.price_snapshot)}` : ''}
+                                      </p>
+                                    </div>
+                                  )) : (
+                                    <p className="text-xs text-muted-foreground">Ma'lumot yo'q</p>
+                                  )}
+                                </div>
+
+                                {/* Deadline + Financial Card */}
+                                <div className="rounded-lg bg-muted/40 p-3 space-y-2">
+                                  {/* Deadline */}
+                                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                                    <Clock className="h-3 w-3" /> Muddat
+                                  </p>
+                                  {deadline ? (
+                                    <div>
+                                      <p className="text-xs font-medium">{format(deadline, 'dd.MM.yyyy HH:mm')}</p>
+                                      {isOverdue ? (
+                                        <Badge variant="destructive" className="text-[10px] mt-1">
+                                          <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
+                                          MUDDAT O'TIB KETGAN
+                                        </Badge>
+                                      ) : hoursLeft !== null && hoursLeft > 0 && hoursLeft <= 48 && ['new', 'in_progress'].includes(order.status) ? (
+                                        <Badge variant="outline" className="text-[10px] mt-1 border-amber-300 text-amber-700">
+                                          {hoursLeft < 24 ? `${hoursLeft} soat qoldi` : `${Math.ceil(hoursLeft / 24)} kun qoldi`}
+                                        </Badge>
+                                      ) : null}
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground italic">Belgilanmagan</p>
+                                  )}
+
+                                  {/* Financial summary */}
+                                  {canSeeProfits && (
+                                    <div className="pt-2 mt-1 border-t border-border/50 space-y-1">
+                                      <div className="flex justify-between text-[10px]">
+                                        <span className="text-muted-foreground">Narx</span>
+                                        <span className="font-medium">{formatPrice(order.total_price || 0)}</span>
+                                      </div>
+                                      <div className="flex justify-between text-[10px]">
+                                        <span className="text-muted-foreground">Tannarx</span>
+                                        <span className="font-medium">{formatPrice(order.cost_price || 0)}</span>
+                                      </div>
+                                      {orderExp > 0 && (
+                                        <div className="flex justify-between text-[10px]">
+                                          <span className="text-muted-foreground">Xarajat</span>
+                                          <span className="font-medium text-rose-600">-{formatPrice(orderExp)}</span>
+                                        </div>
+                                      )}
+                                      <div className={cn("flex justify-between text-[10px] font-bold pt-1 border-t border-border/30", profit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                                        <span>Foyda</span>
+                                        <span>{profit >= 0 ? '+' : ''}{formatPrice(profit)}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Expense Quick Summary */}
+                              {canSeeProfits && expDetail && (
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                  {EXPENSE_TYPE_CONFIG.map(t => {
+                                    const amt = expDetail.byType[t.value] || 0;
+                                    if (amt === 0) return null;
+                                    return (
+                                      <Badge key={t.value} variant="outline" className="text-[10px] gap-1 font-normal">
+                                        <t.icon className="h-2.5 w-2.5" style={{ color: t.color }} />
+                                        {t.label}: {formatPrice(amt)}
+                                      </Badge>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              {canSeeProfits && !expDetail && (
+                                <p className="mt-2 text-[10px] text-muted-foreground italic">Xarajat qo'shilmagan</p>
+                              )}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </ScrollArea>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
