@@ -279,7 +279,7 @@ export default function Dashboard() {
         return d >= dayStart && d <= dayEnd;
       });
       const dayRev = dayOrders
-        .filter(o => ['completed', 'sotildi', 'keyinroq_sotildi'].includes(o.status))
+        .filter(o => ['sotildi', 'keyinroq_sotildi'].includes(o.status))
         .reduce((s, o) => s + (o.total_price || 0), 0);
       const dayCost = dayOrders.reduce((s, o) => s + (o.cost_price || 0) + (orderExpMap[o.id] || 0), 0);
 
