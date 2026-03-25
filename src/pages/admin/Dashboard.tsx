@@ -154,6 +154,7 @@ export default function Dashboard() {
   const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
   const [fromPopoverOpen, setFromPopoverOpen] = useState(false);
   const [toPopoverOpen, setToPopoverOpen] = useState(false);
+  const [statusModalKey, setStatusModalKey] = useState<string | null>(null);
 
   const { isAdmin, isManager, user } = useAuth();
   const navigate = useNavigate();
