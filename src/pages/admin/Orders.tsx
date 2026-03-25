@@ -279,6 +279,10 @@ export default function Orders() {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const order = orders.find(o => o.id === orderId);
+    const oldStatus = order?.status || '';
+    if (oldStatus === newStatus) return;
+
     try {
       const { error } = await supabase
         .from('orders')
@@ -287,9 +291,17 @@ export default function Orders() {
 
       if (error) throw error;
 
+      // Log status change to history
+      await (supabase as any).from('order_status_history').insert({
+        order_id: orderId,
+        old_status: oldStatus,
+        new_status: newStatus,
+        changed_by: user?.id || null,
+      });
+
       setOrders(prev =>
-        prev.map(order =>
-          order.id === orderId ? { ...order, status: newStatus } : order
+        prev.map(o =>
+          o.id === orderId ? { ...o, status: newStatus } : o
         )
       );
 
@@ -297,14 +309,16 @@ export default function Orders() {
         setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
       }
 
+      const oldLabel = STATUS_CONFIG[oldStatus as keyof typeof STATUS_CONFIG]?.label || oldStatus;
+      const newLabel = STATUS_CONFIG[newStatus as keyof typeof STATUS_CONFIG]?.label || newStatus;
       toast({
-        title: 'Muvaffaqiyat',
-        description: 'Buyurtma holati yangilandi',
+        title: 'Buyurtma holati muvaffaqiyatli yangilandi',
+        description: `${oldLabel} → ${newLabel}`,
       });
 
       // Send Telegram notification on status change
       if (telegramSettings?.enabled && selectedOrder) {
-        await sendTelegramNotification(selectedOrder, `Status yangilandi: ${STATUS_CONFIG[newStatus as keyof typeof STATUS_CONFIG]?.label || newStatus}`);
+        await sendTelegramNotification(selectedOrder, `Status yangilandi: ${newLabel}`);
       }
     } catch (error) {
       console.error('Error updating order status:', error);
