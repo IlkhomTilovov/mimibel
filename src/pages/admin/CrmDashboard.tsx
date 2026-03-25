@@ -112,11 +112,11 @@ export default function CrmDashboard() {
       const orderExp = orderExpMap[o.id] || 0;
       totalOrderExp += orderExp;
 
-      if (o.status === 'completed' || o.status === 'sotildi') {
+      if (o.status === 'sotildi') {
         totalRevenue += o.total_price || 0;
         totalCost += o.cost_price || 0;
         soldCount++;
-      } else if (o.status === 'sotilmadi' || o.status === 'cancelled') {
+      } else if (o.status === 'sotilmadi') {
         totalCost += o.cost_price || 0;
         unsoldCount++;
       } else if (o.status === 'keyinroq_sotildi') {
