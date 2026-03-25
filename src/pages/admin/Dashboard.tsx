@@ -5,8 +5,10 @@ import {
   AlertTriangle, Bell, RefreshCw, ArrowRight, Plus, Users,
   Warehouse, Receipt, BarChart3, Loader2, Calendar as CalendarIcon,
   ArrowUpRight, ArrowDownRight, ChevronDown, ChevronRight,
-  Layers, Truck, Hammer, Clock
+  Layers, Truck, Hammer, Clock, Phone, Send, Eye, X
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
