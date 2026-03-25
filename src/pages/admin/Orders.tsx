@@ -514,59 +514,34 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
       </div>
 
       {/* Status Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setStatusFilter('new')}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Yangi</p>
-                <p className="text-2xl font-bold text-blue-600">{statusCounts.new || 0}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        {[
+          { key: 'new', label: 'Yangi', icon: Package, color: 'blue' },
+          { key: 'in_progress', label: 'Jarayonda', icon: Clock, color: 'amber' },
+          { key: 'completed', label: 'Bajarildi', icon: ShoppingBag, color: 'green' },
+          { key: 'cancelled', label: 'Bekor qilindi', icon: X, color: 'red' },
+          { key: 'sotildi', label: 'Sotildi', icon: ShoppingBag, color: 'emerald' },
+          { key: 'sotilmadi', label: 'Sotilmadi', icon: X, color: 'rose' },
+          { key: 'keyinroq_sotildi', label: 'Keyinroq sotildi', icon: Clock, color: 'violet' },
+        ].map(({ key, label, icon: Icon, color }) => (
+          <Card
+            key={key}
+            className={`cursor-pointer hover:shadow-md transition-shadow ${statusFilter === key ? 'ring-2 ring-primary' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === key ? 'all' : key)}
+          >
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                  <p className={`text-xl font-bold text-${color}-600`}>{statusCounts[key] || 0}</p>
+                </div>
+                <div className={`h-8 w-8 rounded-full bg-${color}-100 flex items-center justify-center`}>
+                  <Icon className={`h-4 w-4 text-${color}-600`} />
+                </div>
               </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Package className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setStatusFilter('in_progress')}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Jarayonda</p>
-                <p className="text-2xl font-bold text-amber-600">{statusCounts.in_progress || 0}</p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-amber-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setStatusFilter('completed')}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Bajarildi</p>
-                <p className="text-2xl font-bold text-green-600">{statusCounts.completed || 0}</p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                <ShoppingBag className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setStatusFilter('cancelled')}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Bekor qilindi</p>
-                <p className="text-2xl font-bold text-red-600">{statusCounts.cancelled || 0}</p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                <X className="h-5 w-5 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}

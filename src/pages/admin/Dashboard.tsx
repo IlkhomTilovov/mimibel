@@ -766,7 +766,7 @@ export default function Dashboard() {
                         {order.total_price && (
                           <p className="text-xs font-medium">{formatPrice(order.total_price)}</p>
                         )}
-                        {canSeeProfits && ['completed', 'sotildi'].includes(order.status) && (
+                        {canSeeProfits && ['completed', 'sotildi', 'keyinroq_sotildi'].includes(order.status) && (
                           <p className={cn("text-xs font-medium flex items-center justify-end gap-0.5", profit >= 0 ? "text-emerald-600" : "text-rose-600")}>
                             {profit >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                             {formatPrice(Math.abs(profit))}

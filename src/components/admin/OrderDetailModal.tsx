@@ -232,12 +232,28 @@ export function OrderDetailModal({ orderId, onClose, onOrderUpdated }: OrderDeta
   };
 
   const handleStatusChange = async (newStatus: string) => {
-    if (!orderId) return;
+    if (!orderId || !order) return;
+    const oldStatus = order.status;
+    if (oldStatus === newStatus) return;
     setChangingStatus(true);
     try {
       const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
       if (error) throw error;
-      toast({ title: 'Status yangilandi' });
+
+      // Log status change to history
+      await supabase.from('order_status_history').insert({
+        order_id: orderId,
+        old_status: oldStatus,
+        new_status: newStatus,
+        changed_by: user?.id || null,
+      });
+
+      const oldLabel = STATUS_CONFIG[oldStatus]?.label || oldStatus;
+      const newLabel = STATUS_CONFIG[newStatus]?.label || newStatus;
+      toast({ 
+        title: 'Buyurtma holati muvaffaqiyatli yangilandi',
+        description: `${oldLabel} → ${newLabel}`,
+      });
       onOrderUpdated?.();
     } catch (err: any) {
       toast({ title: 'Xatolik', description: err.message, variant: 'destructive' });
