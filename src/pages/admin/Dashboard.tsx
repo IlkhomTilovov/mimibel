@@ -74,8 +74,6 @@ interface LowStockProduct {
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   new: { label: 'Yangi', className: 'bg-blue-100 text-blue-800 border-blue-200' },
   in_progress: { label: 'Jarayonda', className: 'bg-amber-100 text-amber-800 border-amber-200' },
-  completed: { label: 'Bajarildi', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  cancelled: { label: 'Bekor', className: 'bg-rose-100 text-rose-800 border-rose-200' },
   sotildi: { label: 'Sotildi', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
   sotilmadi: { label: 'Sotilmadi', className: 'bg-rose-100 text-rose-800 border-rose-200' },
   keyinroq_sotildi: { label: 'Keyinroq sotildi', className: 'bg-violet-100 text-violet-800 border-violet-200' },
