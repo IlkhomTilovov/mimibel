@@ -159,6 +159,15 @@ export default function Orders() {
     fetchTelegramSettings();
   }, [statusFilter, dateFrom, dateTo, user]);
 
+  // Realtime subscription for orders
+  useEffect(() => {
+    const channel = supabase
+      .channel('orders-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchOrders())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [statusFilter, dateFrom, dateTo, user]);
+
   const fetchTelegramSettings = async () => {
     try {
       const { data, error } = await supabase
