@@ -240,8 +240,8 @@ export function OrderDetailModal({ orderId, onClose, onOrderUpdated }: OrderDeta
       const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
       if (error) throw error;
 
-      // Log status change to history
-      await supabase.from('order_status_history').insert({
+      // Log status change to history (fire and forget - table may not be in types yet)
+      await (supabase as any).from('order_status_history').insert({
         order_id: orderId,
         old_status: oldStatus,
         new_status: newStatus,
