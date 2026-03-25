@@ -66,8 +66,6 @@ interface CustomerRow {
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   new: { label: 'Yangi', className: 'bg-blue-100 text-blue-800' },
   in_progress: { label: 'Jarayonda', className: 'bg-amber-100 text-amber-800' },
-  completed: { label: 'Bajarildi', className: 'bg-emerald-100 text-emerald-800' },
-  cancelled: { label: 'Bekor', className: 'bg-rose-100 text-rose-800' },
   sotildi: { label: 'Sotildi', className: 'bg-emerald-100 text-emerald-800' },
   sotilmadi: { label: 'Sotilmadi', className: 'bg-rose-100 text-rose-800' },
   keyinroq_sotildi: { label: 'Keyinroq sotildi', className: 'bg-violet-100 text-violet-800' },

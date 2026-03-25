@@ -112,14 +112,6 @@ const STATUS_CONFIG = {
     label: 'Jarayonda', 
     className: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300' 
   },
-  completed: { 
-    label: 'Bajarildi', 
-    className: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300' 
-  },
-  cancelled: { 
-    label: 'Bekor qilindi', 
-    className: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300' 
-  },
   sotildi: {
     label: 'Sotildi',
     className: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300'
@@ -488,7 +480,7 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
 
   // Check if deadline is overdue
   const isOverdue = (order: Order) => {
-    if (!order.deadline || order.status === 'completed' || order.status === 'cancelled') return false;
+    if (!order.deadline || order.status === 'sotildi' || order.status === 'sotilmadi') return false;
     return new Date(order.deadline) < new Date();
   };
 
@@ -541,8 +533,6 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
         {[
           { key: 'new', label: 'Yangi', icon: Package, color: 'blue' },
           { key: 'in_progress', label: 'Jarayonda', icon: Clock, color: 'amber' },
-          { key: 'completed', label: 'Bajarildi', icon: ShoppingBag, color: 'green' },
-          { key: 'cancelled', label: 'Bekor qilindi', icon: X, color: 'red' },
           { key: 'sotildi', label: 'Sotildi', icon: ShoppingBag, color: 'emerald' },
           { key: 'sotilmadi', label: 'Sotilmadi', icon: X, color: 'rose' },
           { key: 'keyinroq_sotildi', label: 'Keyinroq sotildi', icon: Clock, color: 'violet' },
@@ -593,8 +583,6 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                   <SelectItem value="all">Barchasi</SelectItem>
                   <SelectItem value="new">Yangi</SelectItem>
                   <SelectItem value="in_progress">Jarayonda</SelectItem>
-                  <SelectItem value="completed">Bajarildi</SelectItem>
-                  <SelectItem value="cancelled">Bekor qilindi</SelectItem>
                   <SelectItem value="sotildi">Sotildi</SelectItem>
                   <SelectItem value="sotilmadi">Sotilmadi</SelectItem>
                   <SelectItem value="keyinroq_sotildi">Keyinroq sotildi</SelectItem>
@@ -832,8 +820,6 @@ ${order.customer_message ? `\n💬 *Xabar:* ${order.customer_message}` : ''}
                       <SelectContent>
                         <SelectItem value="new">Yangi</SelectItem>
                         <SelectItem value="in_progress">Jarayonda</SelectItem>
-                        <SelectItem value="completed">Bajarildi</SelectItem>
-                        <SelectItem value="cancelled">Bekor qilindi</SelectItem>
                         <SelectItem value="sotildi">Sotildi</SelectItem>
                         <SelectItem value="sotilmadi">Sotilmadi</SelectItem>
                         <SelectItem value="keyinroq_sotildi">Keyinroq sotildi</SelectItem>

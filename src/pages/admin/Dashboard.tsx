@@ -74,8 +74,6 @@ interface LowStockProduct {
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   new: { label: 'Yangi', className: 'bg-blue-100 text-blue-800 border-blue-200' },
   in_progress: { label: 'Jarayonda', className: 'bg-amber-100 text-amber-800 border-amber-200' },
-  completed: { label: 'Bajarildi', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  cancelled: { label: 'Bekor', className: 'bg-rose-100 text-rose-800 border-rose-200' },
   sotildi: { label: 'Sotildi', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
   sotilmadi: { label: 'Sotilmadi', className: 'bg-rose-100 text-rose-800 border-rose-200' },
   keyinroq_sotildi: { label: 'Keyinroq sotildi', className: 'bg-violet-100 text-violet-800 border-violet-200' },
@@ -249,10 +247,10 @@ export default function Dashboard() {
       const orderExp = orderExpMap[o.id] || 0;
       totalOrderExp += orderExp;
 
-      if (['completed', 'sotildi'].includes(o.status)) {
+      if (o.status === 'sotildi') {
         totalRevenue += o.total_price || 0;
         totalCost += o.cost_price || 0;
-      } else if (['sotilmadi', 'cancelled'].includes(o.status)) {
+      } else if (o.status === 'sotilmadi') {
         totalCost += o.cost_price || 0;
       } else if (o.status === 'keyinroq_sotildi') {
         totalRevenue += o.total_price || 0;
@@ -281,7 +279,7 @@ export default function Dashboard() {
         return d >= dayStart && d <= dayEnd;
       });
       const dayRev = dayOrders
-        .filter(o => ['completed', 'sotildi', 'keyinroq_sotildi'].includes(o.status))
+        .filter(o => ['sotildi', 'keyinroq_sotildi'].includes(o.status))
         .reduce((s, o) => s + (o.total_price || 0), 0);
       const dayCost = dayOrders.reduce((s, o) => s + (o.cost_price || 0) + (orderExpMap[o.id] || 0), 0);
 
@@ -567,8 +565,6 @@ export default function Dashboard() {
         {[
           { key: 'new', label: 'Yangi', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', valueColor: 'text-blue-600' },
           { key: 'in_progress', label: 'Jarayonda', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
-          { key: 'completed', label: 'Bajarildi', iconBg: 'bg-green-100', iconColor: 'text-green-600', valueColor: 'text-green-600' },
-          { key: 'cancelled', label: 'Bekor qilindi', iconBg: 'bg-red-100', iconColor: 'text-red-600', valueColor: 'text-red-600' },
           { key: 'sotildi', label: 'Sotildi', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', valueColor: 'text-emerald-600' },
           { key: 'sotilmadi', label: 'Sotilmadi', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', valueColor: 'text-rose-600' },
           { key: 'keyinroq_sotildi', label: 'Keyinroq sotildi', iconBg: 'bg-violet-100', iconColor: 'text-violet-600', valueColor: 'text-violet-600' },

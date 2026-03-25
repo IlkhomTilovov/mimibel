@@ -38,8 +38,6 @@ interface ExpenseRow {
 const STATUS_LABELS: Record<string, string> = {
   new: 'Yangi',
   in_progress: 'Jarayonda',
-  completed: 'Bajarildi',
-  cancelled: 'Bekor qilindi',
   sotildi: 'Sotildi',
   sotilmadi: 'Sotilmadi',
   keyinroq_sotildi: 'Keyinroq sotildi',
@@ -114,11 +112,11 @@ export default function CrmDashboard() {
       const orderExp = orderExpMap[o.id] || 0;
       totalOrderExp += orderExp;
 
-      if (o.status === 'completed' || o.status === 'sotildi') {
+      if (o.status === 'sotildi') {
         totalRevenue += o.total_price || 0;
         totalCost += o.cost_price || 0;
         soldCount++;
-      } else if (o.status === 'sotilmadi' || o.status === 'cancelled') {
+      } else if (o.status === 'sotilmadi') {
         totalCost += o.cost_price || 0;
         unsoldCount++;
       } else if (o.status === 'keyinroq_sotildi') {
@@ -143,7 +141,7 @@ export default function CrmDashboard() {
         const d = new Date(o.created_at);
         return d >= mStart && d <= mEnd;
       });
-      const mRev = mOrders.filter(o => ['completed', 'sotildi', 'keyinroq_sotildi'].includes(o.status))
+      const mRev = mOrders.filter(o => ['sotildi', 'keyinroq_sotildi'].includes(o.status))
         .reduce((s, o) => s + (o.total_price || 0), 0);
       const mCost = mOrders.reduce((s, o) => s + (o.cost_price || 0), 0);
       const mOrdExp = mOrders.reduce((s, o) => s + (orderExpMap[o.id] || 0), 0);
