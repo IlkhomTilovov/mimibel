@@ -133,6 +133,7 @@ export default function Orders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [quickDateFilter, setQuickDateFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [telegramSettings, setTelegramSettings] = useState<TelegramSettings | null>(null);

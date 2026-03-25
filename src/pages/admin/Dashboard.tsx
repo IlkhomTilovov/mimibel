@@ -23,7 +23,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line
 } from 'recharts';
-import { format, subDays, subMonths, startOfMonth, endOfMonth, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
+import { format, subDays, subMonths, startOfMonth, endOfMonth, startOfDay, endOfDay, startOfWeek, endOfWeek, isAfter, isBefore, addDays } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -88,28 +88,26 @@ const EXPENSE_TYPE_CONFIG = [
 
 const CHART_COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'];
 
-const DATE_FILTERS = [
+const QUICK_DATE_FILTERS = [
   { value: 'today', label: 'Bugun' },
-  { value: 'week', label: 'Bu hafta' },
-  { value: 'month', label: 'Bu oy' },
-  { value: '3months', label: '3 oy' },
-  { value: '6months', label: '6 oy' },
-  { value: 'year', label: '1 yil' },
+  { value: 'yesterday', label: 'Kecha' },
+  { value: '7days', label: '7 kun' },
+  { value: '30days', label: '30 kun' },
+  { value: 'this_month', label: 'Bu oy' },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────
 const formatPrice = (n: number) => new Intl.NumberFormat('uz-UZ').format(Math.round(n)) + " so'm";
 
-const getDateRange = (filter: string): { start: Date; end: Date } => {
+const getQuickDateRange = (filter: string): { start: Date; end: Date } => {
   const now = new Date();
   const end = endOfDay(now);
   switch (filter) {
     case 'today': return { start: startOfDay(now), end };
-    case 'week': return { start: startOfWeek(now, { weekStartsOn: 1 }), end };
-    case 'month': return { start: startOfMonth(now), end };
-    case '3months': return { start: startOfMonth(subMonths(now, 2)), end };
-    case '6months': return { start: startOfMonth(subMonths(now, 5)), end };
-    case 'year': return { start: startOfMonth(subMonths(now, 11)), end };
+    case 'yesterday': return { start: startOfDay(subDays(now, 1)), end: endOfDay(subDays(now, 1)) };
+    case '7days': return { start: startOfDay(subDays(now, 6)), end };
+    case '30days': return { start: startOfDay(subDays(now, 29)), end };
+    case 'this_month': return { start: startOfMonth(now), end };
     default: return { start: startOfMonth(now), end };
   }
 };
@@ -132,6 +130,12 @@ const formatRelativeDate = (dateString: string) => {
   return format(date, 'dd.MM.yyyy');
 };
 
+const formatDateLabel = (start: Date, end: Date) => {
+  const sameDay = format(start, 'dd.MM.yyyy') === format(end, 'dd.MM.yyyy');
+  if (sameDay) return format(start, 'dd.MM.yyyy');
+  return `${format(start, 'dd MMM')} – ${format(end, 'dd MMM')}`;
+};
+
 // ─── Component ───────────────────────────────────────────
 export default function Dashboard() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
@@ -141,13 +145,47 @@ export default function Dashboard() {
   const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [dateFrom, setDateFrom] = useState<Date>(startOfDay(new Date()));
+  const [dateTo, setDateTo] = useState<Date>(endOfDay(new Date()));
+  const [quickFilter, setQuickFilter] = useState('today');
   const [statusFilter, setStatusFilter] = useState('all');
   const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
+  const [fromPopoverOpen, setFromPopoverOpen] = useState(false);
+  const [toPopoverOpen, setToPopoverOpen] = useState(false);
 
   const { isAdmin, isManager, user } = useAuth();
   const navigate = useNavigate();
   const canSeeProfits = isAdmin || isManager;
+
+  // Quick filter handler
+  const handleQuickFilter = (value: string) => {
+    setQuickFilter(value);
+    const range = getQuickDateRange(value);
+    setDateFrom(range.start);
+    setDateTo(range.end);
+  };
+
+  const handleDateFromChange = (d: Date | undefined) => {
+    if (!d) return;
+    const newFrom = startOfDay(d);
+    if (isAfter(newFrom, dateTo)) {
+      setDateTo(endOfDay(d));
+    }
+    setDateFrom(newFrom);
+    setQuickFilter('custom');
+    setFromPopoverOpen(false);
+  };
+
+  const handleDateToChange = (d: Date | undefined) => {
+    if (!d) return;
+    const newTo = endOfDay(d);
+    if (isBefore(newTo, dateFrom)) {
+      setDateFrom(startOfDay(d));
+    }
+    setDateTo(newTo);
+    setQuickFilter('custom');
+    setToPopoverOpen(false);
+  };
 
   // ─── Data Fetching ──────────────────────────────────────
   const fetchAll = useCallback(async () => {
@@ -212,8 +250,8 @@ export default function Dashboard() {
 
   // ─── Analytics Computation ──────────────────────────────
   const analytics = useMemo(() => {
-    const start = startOfDay(selectedDate);
-    const end = endOfDay(selectedDate);
+    const start = dateFrom;
+    const end = dateTo;
 
     let filteredOrders = orders.filter(o => {
       const d = new Date(o.created_at);
@@ -265,11 +303,11 @@ export default function Dashboard() {
     const totalExpenses = totalCost + totalOrderExp + totalGlobalExp;
     const netProfit = totalRevenue - totalExpenses;
 
-    // Daily chart data (last 30 days or filtered range)
-    const dayCount = Math.min(Math.ceil((end.getTime() - start.getTime()) / 86400000), 90);
+    // Daily chart data
+    const rangeDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000));
     const dailyData: { date: string; revenue: number; profit: number }[] = [];
-    for (let i = dayCount - 1; i >= 0; i--) {
-      const day = subDays(end, i);
+    for (let i = 0; i < rangeDays; i++) {
+      const day = addDays(start, i);
       const dayStart = startOfDay(day);
       const dayEnd = endOfDay(day);
       const label = format(day, 'dd.MM');
@@ -348,7 +386,7 @@ export default function Dashboard() {
       globalExpByType,
       filteredOrders,
     };
-  }, [orders, orderExpenses, globalExpenses, orderItems, selectedDate, statusFilter]);
+  }, [orders, orderExpenses, globalExpenses, orderItems, dateFrom, dateTo, statusFilter]);
 
   // ─── Loading State ──────────────────────────────────────
   if (loading) {
@@ -377,41 +415,93 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Biznes analitikasi — real vaqtda</p>
+          <p className="text-sm text-muted-foreground">
+            Biznes analitikasi — {formatDateLabel(dateFrom, dateTo)}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="h-9 gap-1.5 text-sm">
-                <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                {format(selectedDate, 'dd.MM.yyyy')}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(d) => d && setSelectedDate(d)}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Barcha status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barcha status</SelectItem>
-              {Object.entries(STATUS_CONFIG).map(([key, val]) => (
-                <SelectItem key={key} value={key}>{val.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <Button variant="outline" size="sm" onClick={fetchAll} disabled={refreshing} className="h-9">
             <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", refreshing && "animate-spin")} />
             Yangilash
           </Button>
         </div>
       </div>
+
+      {/* ─── Date Range Filter Bar ────────────────────── */}
+      <Card>
+        <CardContent className="p-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            {/* Quick filters */}
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_DATE_FILTERS.map(f => (
+                <Button
+                  key={f.value}
+                  variant={quickFilter === f.value ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => handleQuickFilter(f.value)}
+                >
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+
+            <div className="hidden sm:block h-6 w-px bg-border" />
+
+            {/* Date range pickers */}
+            <div className="flex items-center gap-2">
+              <Popover open={fromPopoverOpen} onOpenChange={setFromPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-8 gap-1.5 text-xs font-normal">
+                    <CalendarIcon className="h-3 w-3 text-muted-foreground" />
+                    {format(dateFrom, 'dd.MM.yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={handleDateFromChange}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              <span className="text-muted-foreground text-xs">→</span>
+              <Popover open={toPopoverOpen} onOpenChange={setToPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-8 gap-1.5 text-xs font-normal">
+                    <CalendarIcon className="h-3 w-3 text-muted-foreground" />
+                    {format(dateTo, 'dd.MM.yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={handleDateToChange}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="hidden sm:block h-6 w-px bg-border" />
+
+            {/* Status filter */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Barcha status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Barcha status</SelectItem>
+                {Object.entries(STATUS_CONFIG).map(([key, val]) => (
+                  <SelectItem key={key} value={key}>{val.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ─── Alert: Today's New Orders ────────────────── */}
       {analytics.todayNew > 0 && (
@@ -509,6 +599,7 @@ export default function Dashboard() {
           </div>
         );
       })()}
+
       {/* ─── KPI Cards ────────────────────────────────── */}
       <div className={cn("grid gap-4", canSeeProfits ? "grid-cols-2 lg:grid-cols-5" : "grid-cols-2 lg:grid-cols-3")}>
         <KPICard
@@ -561,7 +652,7 @@ export default function Dashboard() {
       </div>
 
       {/* ─── Status Count Cards ───────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {[
           { key: 'new', label: 'Yangi', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', valueColor: 'text-blue-600' },
           { key: 'in_progress', label: 'Jarayonda', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', valueColor: 'text-amber-600' },
@@ -661,7 +752,7 @@ export default function Dashboard() {
             ) : (
               <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
                 <Package className="h-10 w-10 mb-2 opacity-30" />
-                <p className="text-sm">Ma'lumot yo'q</p>
+                <p className="text-sm">Bu oraliqda ma'lumot topilmadi</p>
               </div>
             )}
           </CardContent>
@@ -738,7 +829,7 @@ export default function Dashboard() {
             {analytics.recentOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <ShoppingCart className="h-10 w-10 mb-2 opacity-30" />
-                <p className="text-sm">Buyurtmalar yo'q</p>
+                <p className="text-sm">Bu oraliqda buyurtmalar topilmadi</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -762,7 +853,7 @@ export default function Dashboard() {
                         {order.total_price && (
                           <p className="text-xs font-medium">{formatPrice(order.total_price)}</p>
                         )}
-                        {canSeeProfits && ['completed', 'sotildi', 'keyinroq_sotildi'].includes(order.status) && (
+                        {canSeeProfits && ['sotildi', 'keyinroq_sotildi'].includes(order.status) && (
                           <p className={cn("text-xs font-medium flex items-center justify-end gap-0.5", profit >= 0 ? "text-emerald-600" : "text-rose-600")}>
                             {profit >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                             {formatPrice(Math.abs(profit))}
@@ -1008,7 +1099,7 @@ function EmptyChart() {
   return (
     <div className="flex flex-col items-center justify-center h-[250px] text-muted-foreground">
       <BarChart3 className="h-10 w-10 mb-2 opacity-20" />
-      <p className="text-sm">Ma'lumot yo'q</p>
+      <p className="text-sm">Bu oraliqda ma'lumot topilmadi</p>
     </div>
   );
 }
