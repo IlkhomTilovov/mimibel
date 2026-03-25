@@ -247,10 +247,10 @@ export default function Dashboard() {
       const orderExp = orderExpMap[o.id] || 0;
       totalOrderExp += orderExp;
 
-      if (['completed', 'sotildi'].includes(o.status)) {
+      if (o.status === 'sotildi') {
         totalRevenue += o.total_price || 0;
         totalCost += o.cost_price || 0;
-      } else if (['sotilmadi', 'cancelled'].includes(o.status)) {
+      } else if (o.status === 'sotilmadi') {
         totalCost += o.cost_price || 0;
       } else if (o.status === 'keyinroq_sotildi') {
         totalRevenue += o.total_price || 0;
