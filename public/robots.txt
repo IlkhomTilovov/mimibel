@@ -14,4 +14,3 @@ User-agent: *
 Allow: /
 
 Sitemap: https://mimibel.uz/sitemap.xml
-Sitemap: https://pmvgvaqwjjamqmisgeyb.supabase.co/storage/v1/object/public/sitemap/sitemap.xml
