@@ -66,7 +66,7 @@ export function CatalogFilterSidebar({ categories, onApply, initialFilters, dyna
 
   // Update maxPrice when dynamic options load
   useEffect(() => {
-    if (dynamicOptions?.maxPrice && filters.priceMax === 700000) {
+    if (dynamicOptions?.maxPrice && (filters.priceMax === 700000 || filters.priceMax === 0)) {
       setFilters(prev => ({ ...prev, priceMax: dynamicOptions.maxPrice }));
     }
   }, [dynamicOptions?.maxPrice]);
