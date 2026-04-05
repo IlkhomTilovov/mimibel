@@ -1239,7 +1239,7 @@ export default function ProductsNew() {
                       {formData.meta_title_uz || formData.target_keyword || formData.name_uz}
                     </p>
                     <p className="text-green-700 text-sm">
-                      mirmexa.com.uz/product/{formData.slug || 'slug'}
+                      mimibel.uz/product/{formData.slug || 'slug'}
                     </p>
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {formData.meta_description_uz || formData.description_uz || 'Meta tavsif...'}
