@@ -23,7 +23,7 @@ serve(async (req) => {
       .limit(1)
       .single();
 
-    const siteUrl = (settingsData?.primary_domain || 'https://mirmexa.com.uz').replace(/\/+$/, '');
+    const siteUrl = (settingsData?.primary_domain || 'https://mimibel.uz').replace(/\/+$/, '');
 
     // Fetch active & indexed categories
     const { data: categories } = await supabaseClient
