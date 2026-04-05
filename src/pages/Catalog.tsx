@@ -33,7 +33,7 @@ export default function Catalog() {
   const [sidebarFilters, setSidebarFilters] = useState<SidebarFilters>({
     categoryId: initialCategory,
     priceMin: 0,
-    priceMax: filterOptions.maxPrice,
+    priceMax: 0, // 0 means "no limit" until filter options load
     materials: [],
     colors: [],
     furLengths: [],
@@ -41,6 +41,13 @@ export default function Catalog() {
     inStock: false,
     discounted: false,
   });
+
+  // Sync priceMax when filter options load
+  useEffect(() => {
+    if (filterOptions.maxPrice > 0 && sidebarFilters.priceMax === 0) {
+      setSidebarFilters(prev => ({ ...prev, priceMax: filterOptions.maxPrice }));
+    }
+  }, [filterOptions.maxPrice]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -57,7 +64,7 @@ export default function Catalog() {
     if (debouncedSearch) f.search = debouncedSearch;
     if (sidebarFilters.categoryId !== 'all') f.categoryId = sidebarFilters.categoryId;
     if (sidebarFilters.priceMin > 0) f.priceMin = sidebarFilters.priceMin;
-    if (sidebarFilters.priceMax < filterOptions.maxPrice) f.priceMax = sidebarFilters.priceMax;
+    if (sidebarFilters.priceMax > 0 && sidebarFilters.priceMax < filterOptions.maxPrice) f.priceMax = sidebarFilters.priceMax;
     if (sidebarFilters.materials.length > 0) f.materials = sidebarFilters.materials;
     if (sidebarFilters.colors.length > 0) f.colors = sidebarFilters.colors;
     if (sidebarFilters.furLengths.length > 0) f.furLengths = sidebarFilters.furLengths;
