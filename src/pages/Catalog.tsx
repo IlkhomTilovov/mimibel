@@ -64,7 +64,11 @@ export default function Catalog() {
     if (debouncedSearch) f.search = debouncedSearch;
     if (sidebarFilters.categoryId !== 'all') f.categoryId = sidebarFilters.categoryId;
     if (sidebarFilters.priceMin > 0) f.priceMin = sidebarFilters.priceMin;
-    if (sidebarFilters.priceMax > 0 && sidebarFilters.priceMax < filterOptions.maxPrice) f.priceMax = sidebarFilters.priceMax;
+    // Only apply priceMax if user actively lowered it below the max
+    const effectiveMax = filterOptions.maxPrice || 0;
+    if (sidebarFilters.priceMax > 0 && effectiveMax > 0 && sidebarFilters.priceMax < effectiveMax) {
+      f.priceMax = sidebarFilters.priceMax;
+    }
     if (sidebarFilters.materials.length > 0) f.materials = sidebarFilters.materials;
     if (sidebarFilters.colors.length > 0) f.colors = sidebarFilters.colors;
     if (sidebarFilters.furLengths.length > 0) f.furLengths = sidebarFilters.furLengths;
@@ -96,7 +100,7 @@ export default function Catalog() {
     const params = new URLSearchParams();
     if (sidebarFilters.categoryId !== 'all') params.set('category', sidebarFilters.categoryId);
     if (sidebarFilters.priceMin > 0) params.set('min_price', sidebarFilters.priceMin.toString());
-    if (sidebarFilters.priceMax < filterOptions.maxPrice) params.set('max_price', sidebarFilters.priceMax.toString());
+    if (filterOptions.maxPrice > 0 && sidebarFilters.priceMax < filterOptions.maxPrice) params.set('max_price', sidebarFilters.priceMax.toString());
     if (sidebarFilters.materials.length > 0) params.set('material', sidebarFilters.materials.join(','));
     if (sidebarFilters.colors.length > 0) params.set('color', sidebarFilters.colors.join(','));
     if (sidebarFilters.furLengths.length > 0) params.set('fur_length', sidebarFilters.furLengths.join(','));
