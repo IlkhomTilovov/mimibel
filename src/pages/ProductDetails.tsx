@@ -42,7 +42,7 @@ export default function ProductDetails() {
   const metaDesc = product ? (language === 'uz' ? product.meta_description_uz : product.meta_description_ru) : null;
   const targetKeyword = language === 'uz' 
     ? ((product as any)?.target_keyword || '') 
-    : ((product as any)?.target_keyword_ru || (product as any)?.target_keyword || '');
+    : ((product as any)?.target_keyword_ru || '');
   const keywordVariations: string[] = (product as any)?.keyword_variations || [];
 
   // Use target keyword for SEO title if available
