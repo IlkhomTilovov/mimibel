@@ -355,7 +355,7 @@ export function useProductFilterOptions() {
     colors: [],
     furLengths: [],
     applications: [],
-    maxPrice: 700000,
+    maxPrice: 0,
   });
   const [loading, setLoading] = useState(true);
 
