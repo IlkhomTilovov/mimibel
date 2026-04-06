@@ -1143,7 +1143,6 @@ export default function ProductsNew() {
                     </p>
                   </TabsContent>
                 </Tabs>
-                </div>
               </div>
 
               <Separator />
