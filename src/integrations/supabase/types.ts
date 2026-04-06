@@ -390,6 +390,7 @@ export type Database = {
           slug: string | null
           sort_order: number | null
           target_keyword: string | null
+          target_keyword_ru: string | null
           updated_at: string
         }
         Insert: {
@@ -426,6 +427,7 @@ export type Database = {
           slug?: string | null
           sort_order?: number | null
           target_keyword?: string | null
+          target_keyword_ru?: string | null
           updated_at?: string
         }
         Update: {
@@ -462,6 +464,7 @@ export type Database = {
           slug?: string | null
           sort_order?: number | null
           target_keyword?: string | null
+          target_keyword_ru?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS target_keyword_ru TEXT DEFAULT NULL;
