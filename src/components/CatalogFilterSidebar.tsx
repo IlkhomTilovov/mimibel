@@ -180,30 +180,6 @@ export function CatalogFilterSidebar({ categories, onApply, initialFilters, dyna
 
       <Separator />
 
-      {/* 2. Price Range */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">
-          {isUz ? 'Narx oralig\'i' : 'Диапазон цен'}
-        </Label>
-        <Slider
-          min={0}
-          max={maxPrice}
-          step={10000}
-          value={[filters.priceMin, filters.priceMax]}
-          onValueChange={([min, max]) => {
-            updateFilter('priceMin', min);
-            updateFilter('priceMax', max);
-          }}
-          className="py-2"
-        />
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{formatPrice(filters.priceMin)}</span>
-          <span>{formatPrice(filters.priceMax)}</span>
-        </div>
-      </div>
-
-      <Separator />
-
       {/* 3. Materials - dynamic from DB */}
       {renderDynamicCheckboxGroup(
         isUz ? 'Material turi' : 'Тип материала',
