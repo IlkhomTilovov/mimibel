@@ -39,7 +39,7 @@ export function CatalogFilterSidebar({ categories, onApply, initialFilters, dyna
   const { language } = useLanguage();
   const isUz = language === 'uz';
 
-  const maxPrice = dynamicOptions?.maxPrice || 700000;
+  const maxPrice = dynamicOptions?.maxPrice || 0;
 
   const DEFAULT_FILTERS: SidebarFilters = {
     categoryId: 'all',
@@ -66,7 +66,7 @@ export function CatalogFilterSidebar({ categories, onApply, initialFilters, dyna
 
   // Update maxPrice when dynamic options load
   useEffect(() => {
-    if (dynamicOptions?.maxPrice && (filters.priceMax === 700000 || filters.priceMax === 0)) {
+    if (dynamicOptions?.maxPrice && dynamicOptions.maxPrice > 0 && filters.priceMax === 0) {
       setFilters(prev => ({ ...prev, priceMax: dynamicOptions.maxPrice }));
     }
   }, [dynamicOptions?.maxPrice]);
@@ -97,7 +97,7 @@ export function CatalogFilterSidebar({ categories, onApply, initialFilters, dyna
   const hasActiveFilters =
     filters.categoryId !== 'all' ||
     filters.priceMin > 0 ||
-    filters.priceMax < maxPrice ||
+    (maxPrice > 0 && filters.priceMax > 0 && filters.priceMax < maxPrice) ||
     filters.materials.length > 0 ||
     filters.colors.length > 0 ||
     filters.furLengths.length > 0 ||
