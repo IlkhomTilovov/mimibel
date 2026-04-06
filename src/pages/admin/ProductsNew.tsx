@@ -101,6 +101,7 @@ interface FormData {
   is_indexed: boolean;
   is_followed: boolean;
   target_keyword: string;
+  target_keyword_ru: string;
   keyword_variations: string[];
 }
 
@@ -131,6 +132,7 @@ const emptyForm: FormData = {
   is_indexed: true,
   is_followed: true,
   target_keyword: '',
+  target_keyword_ru: '',
   keyword_variations: [],
 };
 
@@ -365,6 +367,7 @@ export default function ProductsNew() {
       is_indexed: product.is_indexed ?? true,
       is_followed: product.is_followed ?? true,
       target_keyword: product.target_keyword || '',
+      target_keyword_ru: (product as any).target_keyword_ru || '',
       keyword_variations: product.keyword_variations || [],
     });
     setSlugError('');
@@ -493,6 +496,7 @@ export default function ProductsNew() {
       is_indexed: formData.is_indexed,
       is_followed: formData.is_followed,
       target_keyword: formData.target_keyword || null,
+      target_keyword_ru: formData.target_keyword_ru || null,
       keyword_variations: formData.keyword_variations.length > 0 ? formData.keyword_variations : [],
     };
 
@@ -1082,32 +1086,63 @@ export default function ProductsNew() {
               {/* Target Keyword */}
               <div className="space-y-4">
                 <h3 className="font-medium">🎯 Target Keyword</h3>
-                <div className="space-y-2">
-                  <Label>Asosiy kalit so'z</Label>
-                  <Input
-                    value={formData.target_keyword}
-                    onChange={(e) => {
-                      const keyword = e.target.value;
-                      const newFormData = { ...formData, target_keyword: keyword };
-                      if (keyword && (!formData.slug || formData.slug === generateSlug(formData.target_keyword))) {
-                        newFormData.slug = generateSlug(keyword);
-                      }
-                      if (keyword && !formData.meta_title_uz) {
-                        const autoTitle = keyword.charAt(0).toUpperCase() + keyword.slice(1);
-                        if (autoTitle.length <= 60) {
-                          newFormData.meta_title_uz = autoTitle + (formData.name_uz ? ` | ${formData.name_uz}` : '');
-                          if (newFormData.meta_title_uz.length > 60) {
-                            newFormData.meta_title_uz = autoTitle;
+                <Tabs defaultValue="uz" className="w-full">
+                  <TabsList className="mb-2">
+                    <TabsTrigger value="uz">🇺🇿 O'zbekcha</TabsTrigger>
+                    <TabsTrigger value="ru">🇷🇺 Русский</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="uz" className="space-y-2">
+                    <Label>Asosiy kalit so'z (UZ)</Label>
+                    <Input
+                      value={formData.target_keyword}
+                      onChange={(e) => {
+                        const keyword = e.target.value;
+                        const newFormData = { ...formData, target_keyword: keyword };
+                        if (keyword && (!formData.slug || formData.slug === generateSlug(formData.target_keyword))) {
+                          newFormData.slug = generateSlug(keyword);
+                        }
+                        if (keyword && !formData.meta_title_uz) {
+                          const autoTitle = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+                          if (autoTitle.length <= 60) {
+                            newFormData.meta_title_uz = autoTitle + (formData.name_uz ? ` | ${formData.name_uz}` : '');
+                            if (newFormData.meta_title_uz.length > 60) {
+                              newFormData.meta_title_uz = autoTitle;
+                            }
                           }
                         }
-                      }
-                      setFormData(newFormData);
-                    }}
-                    placeholder="Masalan: avto salon koja"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Bu so'z SEO Title, H1 sarlavha va URL slug uchun ishlatiladi
-                  </p>
+                        setFormData(newFormData);
+                      }}
+                      placeholder="Masalan: bolalar kravati"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Bu so'z SEO Title, H1 sarlavha va URL slug uchun ishlatiladi
+                    </p>
+                  </TabsContent>
+                  <TabsContent value="ru" className="space-y-2">
+                    <Label>Ключевое слово (RU)</Label>
+                    <Input
+                      value={formData.target_keyword_ru}
+                      onChange={(e) => {
+                        const keyword = e.target.value;
+                        const newFormData = { ...formData, target_keyword_ru: keyword };
+                        if (keyword && !formData.meta_title_ru) {
+                          const autoTitle = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+                          if (autoTitle.length <= 60) {
+                            newFormData.meta_title_ru = autoTitle + (formData.name_ru ? ` | ${formData.name_ru}` : '');
+                            if (newFormData.meta_title_ru.length > 60) {
+                              newFormData.meta_title_ru = autoTitle;
+                            }
+                          }
+                        }
+                        setFormData(newFormData);
+                      }}
+                      placeholder="Например: детская кроватка"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Это слово используется для SEO Title и мета описания на русском языке
+                    </p>
+                  </TabsContent>
+                </Tabs>
                 </div>
               </div>
 
