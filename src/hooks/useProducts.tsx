@@ -384,7 +384,7 @@ export function useProductFilterOptions() {
         });
 
         // Round max price up to nearest 100k
-        maxPrice = Math.ceil(maxPrice / 100000) * 100000 || 700000;
+        maxPrice = Math.ceil(maxPrice / 100000) * 100000 || 1000000;
 
         setOptions({
           materials: Array.from(materialsSet).sort(),
