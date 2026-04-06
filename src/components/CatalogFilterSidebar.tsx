@@ -64,10 +64,17 @@ export function CatalogFilterSidebar({ categories, onApply, initialFilters, dyna
     }
   }, [initialFilters?.categoryId]);
 
-  // Update maxPrice when dynamic options load
+  // Update priceMax when dynamic options load or change
   useEffect(() => {
-    if (dynamicOptions?.maxPrice && dynamicOptions.maxPrice > 0 && filters.priceMax === 0) {
-      setFilters(prev => ({ ...prev, priceMax: dynamicOptions.maxPrice }));
+    if (dynamicOptions?.maxPrice && dynamicOptions.maxPrice > 0) {
+      setFilters(prev => {
+        // Only auto-update if user hasn't manually changed the slider
+        // (priceMax is 0 meaning unset, or equals the old maxPrice)
+        if (prev.priceMax === 0 || prev.priceMax >= dynamicOptions.maxPrice) {
+          return { ...prev, priceMax: dynamicOptions.maxPrice };
+        }
+        return prev;
+      });
     }
   }, [dynamicOptions?.maxPrice]);
 
